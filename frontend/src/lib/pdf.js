@@ -66,8 +66,9 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
     }
   }
 
-  // Keep all columns on one line while giving the most room to ACTIVITY.
-  const columnWidths = [32, 42, 62, 265, 105, 46];
+  // Give HORÁRIO enough width for its 10pt heading while keeping the
+  // overall A4 table width unchanged. The small reduction comes from ACTIVITY.
+  const columnWidths = [32, 42, 62, 255, 105, 56];
   const widthSum = columnWidths.reduce((sum, width) => sum + width, 0);
   const widthScale = contentWidth / widthSum;
   const scaledWidths = columnWidths.map((width) => width * widthScale);
