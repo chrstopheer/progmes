@@ -85,7 +85,7 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
     startY: cursorY,
     margin: { left: margin, right: margin },
     tableWidth: contentWidth,
-    head: [["DATA", "", "DIVISÃO", "ATIVIDADE", "LOCAL", "HORÁRIO"]],
+    head: [["DATA", "DIA", "DIVISÃO", "ATIVIDADE", "LOCAL", "HORÁRIO"]],
     body,
     theme: "grid",
     styles: {
