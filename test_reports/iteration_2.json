@@ -1,0 +1,19 @@
+{
+  "summary": "Retested 5 user-reported bug fixes on frontend. All fixes verified working end-to-end via Playwright at desktop viewport (1365x900).",
+  "tested_scope": ["frontend"],
+  "passed": [
+    "Bug 1: Header shows only 'Programação / Comunidade Putim' with no '· PWA' on Home and ActivityForm pages",
+    "Bug 2a: Cancel from ActivityForm returns to Home with same month/year (Agosto 2026) - URL preserves ?year=2026&month=7",
+    "Bug 2b: Save from ActivityForm returns to Home with same month/year (Agosto 2026)",
+    "Bug 2c: Delete flow returns to Home with same month/year (Agosto 2026)",
+    "Bug 2d: Schedule view + back-home-btn returns to Home with same month/year (Agosto 2026)",
+    "Bug 3: Schedule preview shows entire A4 table inside #preview-container - last row (day 31) visible, footer 'Todas as Segundas - Daimoku das Hortências' visible; preview_bottom=924 < container_bottom=961 (no clipping)",
+    "Bug 4: time-input clientWidth=178px (>=150 threshold), 'Definir' button no longer cut - screenshot confirms full width",
+    "Bug 5: All 186 table cells in preview have text-align:center (186/186 centered), including filled and empty rows"
+  ],
+  "failed": [],
+  "action_items": [],
+  "success_rate": {"backend": "N/A (skipped as requested)", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true
+}

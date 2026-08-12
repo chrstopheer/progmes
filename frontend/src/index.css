@@ -119,7 +119,7 @@ body {
 .preview-table td {
     border: 1px solid #333;
     padding: 4px 6px;
-    text-align: left;
+    text-align: center;
     vertical-align: middle;
 }
 .preview-table thead th {

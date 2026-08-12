@@ -33,24 +33,41 @@ export default function Schedule() {
   const [monthData, setMonthData] = useState({});
   const previewRef = useRef(null);
   const [previewScale, setPreviewScale] = useState(1);
+  const [previewHeight, setPreviewHeight] = useState(0);
 
   useEffect(() => {
     setSettings(loadSettings());
     setMonthData(loadMonth(y, m));
   }, [y, m]);
 
-  // Fit preview to container
+  // Fit preview to container width and measure natural height
   useEffect(() => {
-    const updateScale = () => {
+    const updateSize = () => {
       const container = document.getElementById("preview-container");
       if (!container) return;
-      const w = container.clientWidth;
-      setPreviewScale(Math.min(1, w / 720));
+      const w = container.clientWidth - 24; // account for padding
+      const scale = Math.min(1, w / 720);
+      setPreviewScale(scale);
+      // measure natural rendered height of preview content
+      if (previewRef.current) {
+        // Reset any prior transform to measure natural size
+        const el = previewRef.current;
+        const prevTransform = el.style.transform;
+        el.style.transform = "none";
+        const naturalH = el.getBoundingClientRect().height;
+        el.style.transform = prevTransform;
+        setPreviewHeight(Math.ceil(naturalH * scale) + 16);
+      }
     };
-    updateScale();
-    window.addEventListener("resize", updateScale);
-    return () => window.removeEventListener("resize", updateScale);
-  }, []);
+    updateSize();
+    // recompute after content settles
+    const t = setTimeout(updateSize, 100);
+    window.addEventListener("resize", updateSize);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("resize", updateSize);
+    };
+  }, [monthData, settings]);
 
   const count = useMemo(() => Object.keys(monthData).length, [monthData]);
 
@@ -92,7 +109,7 @@ export default function Schedule() {
   const handleDeleteMonth = () => {
     deleteMonth(y, m);
     toast.success("Programação do mês excluída.");
-    navigate("/");
+    navigate(`/?year=${y}&month=${m}`);
   };
 
   return (
@@ -101,7 +118,7 @@ export default function Schedule() {
         right={
           <Button
             variant="ghost"
-            onClick={() => navigate("/")}
+            onClick={() => navigate(`/?year=${y}&month=${m}`)}
             data-testid="back-home-btn"
             className="text-sm"
           >
@@ -139,8 +156,7 @@ export default function Schedule() {
           <div
             style={{
               width: "100%",
-              height: `${(1050 * previewScale) + 32}px`,
-              maxHeight: 1100,
+              height: previewHeight ? `${previewHeight}px` : "auto",
               overflow: "hidden",
             }}
           >

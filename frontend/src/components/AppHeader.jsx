@@ -31,7 +31,7 @@ export function AppHeader({ right }) {
               className="text-xs"
               style={{ color: "var(--ink-soft)" }}
             >
-              Comunidade Putim · PWA
+              Comunidade Putim
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppHeader } from "../components/AppHeader";
 import { SettingsDialog } from "../components/SettingsDialog";
 import {
@@ -29,12 +29,27 @@ import { loadMonth, listSavedMonths } from "../lib/storage";
 
 export default function Home() {
   const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth());
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlYear = parseInt(searchParams.get("year") || "", 10);
+  const urlMonth = parseInt(searchParams.get("month") || "", 10);
+  const [year, setYear] = useState(
+    Number.isFinite(urlYear) ? urlYear : now.getFullYear(),
+  );
+  const [month, setMonth] = useState(
+    Number.isFinite(urlMonth) && urlMonth >= 0 && urlMonth <= 11
+      ? urlMonth
+      : now.getMonth(),
+  );
   const [openSettings, setOpenSettings] = useState(false);
   const [monthData, setMonthData] = useState({});
   const [savedMonths, setSavedMonths] = useState([]);
   const navigate = useNavigate();
+
+  // Keep URL in sync so back-navigation preserves the view
+  useEffect(() => {
+    setSearchParams({ year: String(year), month: String(month) }, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [year, month]);
 
   const refreshData = () => {
     setMonthData(loadMonth(year, month));

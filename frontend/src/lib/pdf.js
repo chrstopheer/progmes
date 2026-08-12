@@ -78,6 +78,7 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
       lineWidth: 0.4,
       overflow: "linebreak",
       valign: "middle",
+      halign: "center",
     },
     headStyles: {
       fillColor: [244, 196, 48],
@@ -88,12 +89,12 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
       lineWidth: 0.5,
     },
     columnStyles: {
-      0: { cellWidth: 28, halign: "center" },
+      0: { cellWidth: 28 },
       1: { cellWidth: 40 },
       2: { cellWidth: 55 },
       3: { cellWidth: "auto" },
       4: { cellWidth: 120 },
-      5: { cellWidth: 50, halign: "center" },
+      5: { cellWidth: 50 },
     },
     didParseCell: (data) => {
       if (data.section === "body") {

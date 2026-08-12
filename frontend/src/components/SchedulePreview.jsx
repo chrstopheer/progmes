@@ -60,14 +60,12 @@ export const SchedulePreview = React.forwardRef(function SchedulePreview(
         <tbody>
           {rows.map((r) => (
             <tr key={r.day} className={r.isFilled ? "filled" : ""}>
-              <td style={{ width: 30, textAlign: "center", fontWeight: 600 }}>
-                {r.day}
-              </td>
+              <td style={{ width: 30, fontWeight: 600 }}>{r.day}</td>
               <td style={{ width: 50 }}>{r.wd}</td>
               <td>{r.division}</td>
               <td>{r.activity}</td>
               <td>{r.place}</td>
-              <td style={{ textAlign: "center" }}>{r.time}</td>
+              <td>{r.time}</td>
             </tr>
           ))}
         </tbody>

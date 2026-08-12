@@ -79,7 +79,7 @@ export default function ActivityForm() {
         <AppHeader />
         <main className="max-w-2xl mx-auto p-6">
           <p>Data inválida.</p>
-          <Button onClick={() => navigate("/")} className="mt-4">
+          <Button onClick={() => navigate(`/?year=${y}&month=${m}`)} className="mt-4">
             Voltar
           </Button>
         </main>
@@ -99,13 +99,13 @@ export default function ActivityForm() {
       time: form.time.trim(),
     });
     toast.success("Atividade salva!");
-    navigate("/");
+    navigate(`/?year=${y}&month=${m}`);
   };
 
   const handleDelete = () => {
     deleteActivity(y, m, d);
     toast.success("Atividade excluída.");
-    navigate("/");
+    navigate(`/?year=${y}&month=${m}`);
   };
 
   return (
@@ -114,7 +114,7 @@ export default function ActivityForm() {
         right={
           <Button
             variant="ghost"
-            onClick={() => navigate("/")}
+            onClick={() => navigate(`/?year=${y}&month=${m}`)}
             data-testid="back-home-btn"
             className="text-sm"
           >
@@ -206,7 +206,7 @@ export default function ActivityForm() {
               />
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid sm:grid-cols-[1fr_180px] gap-4">
               <div className="space-y-2">
                 <Label htmlFor="place">
                   <MapPin className="inline h-3.5 w-3.5 mr-1" /> Local
@@ -220,16 +220,50 @@ export default function ActivityForm() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="time">
+                <Label>
                   <Clock className="inline h-3.5 w-3.5 mr-1" /> Horário
                 </Label>
-                <Input
-                  id="time"
-                  data-testid="time-input"
-                  type="time"
-                  value={form.time}
-                  onChange={(e) => setForm((f) => ({ ...f, time: e.target.value }))}
-                />
+                <div className="flex items-center gap-2" data-testid="time-picker">
+                  <Select
+                    value={form.time ? form.time.split(":")[0] : undefined}
+                    onValueChange={(h) => {
+                      const currMin = form.time ? form.time.split(":")[1] : "00";
+                      setForm((f) => ({ ...f, time: `${h}:${currMin}` }));
+                    }}
+                  >
+                    <SelectTrigger className="flex-1" data-testid="time-hour-select">
+                      <SelectValue placeholder="HH" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-64">
+                      {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0")).map((h) => (
+                        <SelectItem key={h} value={h} data-testid={`time-hour-${h}`}>
+                          {h}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-lg font-semibold" style={{ color: "var(--ink-soft)" }}>
+                    :
+                  </span>
+                  <Select
+                    value={form.time ? form.time.split(":")[1] : undefined}
+                    onValueChange={(mn) => {
+                      const currHour = form.time ? form.time.split(":")[0] : "00";
+                      setForm((f) => ({ ...f, time: `${currHour}:${mn}` }));
+                    }}
+                  >
+                    <SelectTrigger className="flex-1" data-testid="time-minute-select">
+                      <SelectValue placeholder="MM" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-64">
+                      {["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"].map((mn) => (
+                        <SelectItem key={mn} value={mn} data-testid={`time-minute-${mn}`}>
+                          {mn}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           </div>
@@ -271,7 +305,7 @@ export default function ActivityForm() {
             <div className="flex gap-3 sm:justify-end">
               <Button
                 variant="ghost"
-                onClick={() => navigate("/")}
+                onClick={() => navigate(`/?year=${y}&month=${m}`)}
                 data-testid="cancel-activity-btn"
               >
                 Cancelar
