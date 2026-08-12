@@ -1,8 +1,8 @@
 import React from "react";
 import { daysInMonth, weekdayAbbrOfDay, MONTHS_PT } from "../lib/date-utils";
 
-// Live preview of the printable A4 table. When a day has multiple activities,
-// the DATA cells (day number + weekday) are merged via rowSpan.
+// Live preview of the printable A4 table. DATA and DIA are independent
+// columns, while repeated activities for the same day keep both cells merged.
 export const SchedulePreview = React.forwardRef(function SchedulePreview(
   { year, month, settings, monthData, scale = 1 },
   ref,
@@ -67,13 +67,12 @@ export const SchedulePreview = React.forwardRef(function SchedulePreview(
       <table className="preview-table">
         <thead>
           <tr>
-            <th colSpan={2} style={{ width: 80 }}>
-              DATA
-            </th>
-            <th style={{ width: 70 }}>DIVISÃO</th>
+            <th style={{ width: 38 }}>DATA</th>
+            <th style={{ width: 48 }}>DIA</th>
+            <th style={{ width: 72 }}>DIVISÃO</th>
             <th>ATIVIDADE</th>
-            <th style={{ width: 150 }}>LOCAL</th>
-            <th style={{ width: 60 }}>HORÁRIO</th>
+            <th style={{ width: 140 }}>LOCAL</th>
+            <th style={{ width: 62 }}>HORÁRIO</th>
           </tr>
         </thead>
         <tbody>
@@ -82,13 +81,13 @@ export const SchedulePreview = React.forwardRef(function SchedulePreview(
               {r.isFirst && (
                 <td
                   rowSpan={r.rowSpan}
-                  style={{ width: 30, fontWeight: 600 }}
+                  style={{ width: 38, fontWeight: 600 }}
                 >
                   {r.day}
                 </td>
               )}
               {r.isFirst && (
-                <td rowSpan={r.rowSpan} style={{ width: 50 }}>
+                <td rowSpan={r.rowSpan} style={{ width: 48 }}>
                   {r.wd}
                 </td>
               )}
