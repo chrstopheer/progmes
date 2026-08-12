@@ -1,8 +1,9 @@
 import React from "react";
 import { daysInMonth, weekdayAbbrOfDay, MONTHS_PT } from "../lib/date-utils";
 
-// Live preview of the printable A4 table. When a day has multiple activities,
-// the DATA cells (day number + weekday) are merged via rowSpan.
+// Live preview of the printable A4 table.
+// Day number and weekday are kept in separate columns,
+// even when a day has multiple activities.
 export const SchedulePreview = React.forwardRef(function SchedulePreview(
   { year, month, settings, monthData, scale = 1 },
   ref,
@@ -13,6 +14,7 @@ export const SchedulePreview = React.forwardRef(function SchedulePreview(
   for (let d = 1; d <= dim; d++) {
     const entries = monthData?.[d];
     const wd = weekdayAbbrOfDay(year, month, d);
+
     if (Array.isArray(entries) && entries.length > 0) {
       entries.forEach((e, idx) => {
         rows.push({
@@ -58,7 +60,11 @@ export const SchedulePreview = React.forwardRef(function SchedulePreview(
         <div className="h-title">
           {settings.header.title} - {MONTHS_PT[month]}
         </div>
-        <div className="h-sub">{settings.header.community}</div>
+
+        <div className="h-sub">
+          {settings.header.community}
+        </div>
+
         <div className="h-quote">
           {year} - {settings.header.quote}
         </div>
@@ -67,27 +73,61 @@ export const SchedulePreview = React.forwardRef(function SchedulePreview(
       <table className="preview-table">
         <thead>
           <tr>
-            <th colSpan={2} style={{ width: 80 }}>
-              DATA
+            <th style={{ width: 30 }}>
+              DAY NUMBER
             </th>
-            <th style={{ width: 70 }}>DIVISÃO</th>
-            <th>ATIVIDADE</th>
-            <th style={{ width: 150 }}>LOCAL</th>
-            <th style={{ width: 60 }}>HORÁRIO</th>
+
+            <th style={{ width: 50 }}>
+              WEEKDAY
+            </th>
+
+            <th style={{ width: 70 }}>
+              DIVISÃO
+            </th>
+
+            <th>
+              ATIVIDADE
+            </th>
+
+            <th style={{ width: 150 }}>
+              LOCAL
+            </th>
+
+            <th style={{ width: 60 }}>
+              HORÁRIO
+            </th>
           </tr>
         </thead>
+
         <tbody>
           {rows.map((r, i) => (
-            <tr key={i} className={r.isFilled ? "filled" : ""}>
+            <tr
+              key={i}
+              className={r.isFilled ? "filled" : ""}
+            >
               {r.isFirst && (
                 <td
                   rowSpan={r.rowSpan}
-                  style={{ width: 30, fontWeight: 600 }}
+                  style={{
+                    width: 30,
+                    fontWeight: 600,
+                  }}
                 >
                   {r.day}
                 </td>
               )}
-              {r.isFirst && <td rowSpan={r.rowSpan} style={{ width: 50 }}>{r.wd}</td>}
+
+              {r.isFirst && (
+                <td
+                  rowSpan={r.rowSpan}
+                  style={{
+                    width: 50,
+                  }}
+                >
+                  {r.wd}
+                </td>
+              )}
+
               <td>{r.division}</td>
               <td>{r.activity}</td>
               <td>{r.place}</td>
@@ -97,7 +137,9 @@ export const SchedulePreview = React.forwardRef(function SchedulePreview(
         </tbody>
       </table>
 
-      <div className="preview-footer">{settings.footer}</div>
+      <div className="preview-footer">
+        {settings.footer}
+      </div>
     </div>
   );
 });
