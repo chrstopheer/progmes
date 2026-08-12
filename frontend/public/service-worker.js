@@ -1,5 +1,7 @@
-// Minimal service worker for offline PWA support
-const CACHE_NAME = "prog-ong-v1";
+// PWA service worker: keep the app available offline while always checking
+// the network first for HTML/navigation requests so new deployments are
+// picked up without requiring the user to clear the browser cache.
+const CACHE_NAME = "prog-ong-v2";
 const CORE_ASSETS = ["/", "/index.html", "/manifest.json"];
 
 self.addEventListener("install", (event) => {
@@ -13,7 +15,9 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
-        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)),
+        keys
+          .filter((key) => key !== CACHE_NAME)
+          .map((key) => caches.delete(key)),
       ),
     ),
   );
@@ -22,18 +26,40 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request)
-        .then((res) => {
-          if (res && res.status === 200 && res.type === "basic") {
-            const clone = res.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+
+  const request = event.request;
+  const isNavigation = request.mode === "navigate" ||
+    request.headers.get("accept")?.includes("text/html");
+
+  if (isNavigation) {
+    // Navigation requests must prefer the newest deployment. If the network
+    // is unavailable, fall back to the cached app shell.
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response && response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
           }
-          return res;
+          return response;
         })
-        .catch(() => cached);
-      return cached || fetchPromise;
+        .catch(() => caches.match(request).then((cached) => cached || caches.match("/index.html"))),
+    );
+    return;
+  }
+
+  // Static assets can remain cache-first for fast loading/offline support.
+  event.respondWith(
+    caches.match(request).then((cached) => {
+      if (cached) return cached;
+
+      return fetch(request).then((response) => {
+        if (response && response.status === 200 && response.type === "basic") {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        }
+        return response;
+      });
     }),
   );
 });
