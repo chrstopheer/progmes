@@ -71,8 +71,8 @@ export const SchedulePreview = React.forwardRef(function SchedulePreview(
             <th style={{ width: 48 }}>DIA</th>
             <th style={{ width: 72 }}>DIVISÃO</th>
             <th>ATIVIDADE</th>
-            <th style={{ width: 140 }}>LOCAL</th>
-            <th style={{ width: 62 }}>HORÁRIO</th>
+            <th style={{ width: 130 }}>LOCAL</th>
+            <th style={{ width: 72 }}>HORÁRIO</th>
           </tr>
         </thead>
         <tbody>
