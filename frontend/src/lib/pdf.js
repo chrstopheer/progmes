@@ -90,7 +90,7 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
     theme: "grid",
     styles: {
       font: "helvetica",
-      fontSize: 9.5,
+      fontSize: 9,
       textColor: [17, 17, 17],
       cellPadding: 2.5,
       lineColor: [51, 51, 51],
