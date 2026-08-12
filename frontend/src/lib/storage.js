@@ -1,0 +1,105 @@
+// LocalStorage-based data layer for the offline PWA.
+// Data model:
+//   settings: { header: {title, community, quote}, footer: string, divisions: string[] }
+//   activities: { [ym: 'YYYY-MM']: { [day: number]: { division, activity, place, time } } }
+
+const SETTINGS_KEY = "prog_ong_settings_v1";
+const ACTIVITIES_KEY = "prog_ong_activities_v1";
+
+export const DEFAULT_DIVISIONS = ["DE", "DFJ", "DMJ", "DF", "DS", "5 Div."];
+
+export const DEFAULT_SETTINGS = {
+  header: {
+    title: "Programação de Atividades",
+    community: "Comunidade Putim",
+    quote:
+      '"Ano do Vibrante Desenvolvimento da Soka Gakkai de Força Jovem Mundial"',
+  },
+  footer: "Todas as Segundas - Daimoku das Hortências",
+  divisions: DEFAULT_DIVISIONS,
+};
+
+export function loadSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (!raw) return { ...DEFAULT_SETTINGS };
+    const parsed = JSON.parse(raw);
+    return {
+      ...DEFAULT_SETTINGS,
+      ...parsed,
+      header: { ...DEFAULT_SETTINGS.header, ...(parsed.header || {}) },
+      divisions: Array.isArray(parsed.divisions) && parsed.divisions.length
+        ? parsed.divisions
+        : DEFAULT_DIVISIONS,
+    };
+  } catch {
+    return { ...DEFAULT_SETTINGS };
+  }
+}
+
+export function saveSettings(settings) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+function loadAllActivities() {
+  try {
+    const raw = localStorage.getItem(ACTIVITIES_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw) || {};
+  } catch {
+    return {};
+  }
+}
+
+function saveAllActivities(data) {
+  localStorage.setItem(ACTIVITIES_KEY, JSON.stringify(data));
+}
+
+export function ymKey(year, month) {
+  return `${year}-${String(month + 1).padStart(2, "0")}`;
+}
+
+export function loadMonth(year, month) {
+  const all = loadAllActivities();
+  return all[ymKey(year, month)] || {};
+}
+
+export function saveActivity(year, month, day, activity) {
+  const all = loadAllActivities();
+  const k = ymKey(year, month);
+  const monthData = all[k] || {};
+  monthData[day] = activity;
+  all[k] = monthData;
+  saveAllActivities(all);
+}
+
+export function deleteActivity(year, month, day) {
+  const all = loadAllActivities();
+  const k = ymKey(year, month);
+  if (all[k]) {
+    delete all[k][day];
+    if (Object.keys(all[k]).length === 0) delete all[k];
+    saveAllActivities(all);
+  }
+}
+
+export function listSavedMonths() {
+  const all = loadAllActivities();
+  return Object.entries(all)
+    .map(([k, v]) => {
+      const [y, m] = k.split("-");
+      return {
+        key: k,
+        year: parseInt(y, 10),
+        month: parseInt(m, 10) - 1,
+        count: Object.keys(v || {}).length,
+      };
+    })
+    .sort((a, b) => (a.key < b.key ? 1 : -1));
+}
+
+export function deleteMonth(year, month) {
+  const all = loadAllActivities();
+  delete all[ymKey(year, month)];
+  saveAllActivities(all);
+}

@@ -1,0 +1,22 @@
+{
+  "short_name": "Programação ONG",
+  "name": "Programação Comunidade Putim",
+  "description": "App PWA de programação mensal de atividades da comunidade",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#FFD400",
+  "background_color": "#FAF7EF"
+}

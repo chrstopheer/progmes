@@ -1,0 +1,27 @@
+{
+  "summary": "Full frontend smoke test of PWA NGO scheduler (Comunidade Putim). All core flows verified end-to-end: calendar rendering, month/year selection, day navigation, activity CRUD, settings customization, schedule preview, PDF download, localStorage persistence across reload, and mobile responsiveness.",
+  "tested_scope": ["frontend", "integration"],
+  "passed": [
+    "Home loads with calendar grid and month/year selectors",
+    "Prev/next month navigation buttons update grid",
+    "Clicking day-15 navigates to /atividade/:year/:month/15 with heading 'Dia 15 Sábado'",
+    "Division select shows all 6 default divisions (DE, DFJ, DMJ, DF, DS, 5 Div.)",
+    "Save activity persists, day cell shows blue-soft background + division label",
+    "Reopening day loads existing values; delete-activity-btn enabled",
+    "Empty activity input shows validation and stays on form",
+    "Cancel button returns to Home without changes",
+    "Settings dialog: header/community/quote/footer editable, add + remove division works, save persists",
+    "view-schedule-btn navigates to /programacao/:year/:month and preview renders",
+    "download-pdf-btn triggers actual PDF download (programacao_agosto_2026.pdf)",
+    "localStorage persistence verified after full page reload (both activity and settings)",
+    "Delete activity flow removes cell filled state",
+    "Mobile viewport (390x844) - calendar remains usable"
+  ],
+  "failed": [],
+  "action_items": [
+    "MINOR (non-blocking): React console warning 'Select is changing from uncontrolled to controlled' emitted when division-select receives value. Consider initializing form.division to '' consistently or use defaultValue to silence. Does not affect functionality."
+  ],
+  "success_rate": {"backend": "N/A (offline PWA, no backend)", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true
+}
