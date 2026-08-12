@@ -114,10 +114,10 @@ def draw_icon(size):
             width=max(2, int(S * 0.006)),
         )
 
-    # Big centered day number "15" in blue (below the red band)
-    font_size = int(S * 0.42)
+    # Big centered day number "1" in blue (below the red band)
+    font_size = int(S * 0.48)
     font = load_font(font_size, bold=True)
-    text = "15"
+    text = "1"
     bbox = d.textbbox((0, 0), text, font=font)
     tw = bbox[2] - bbox[0]
     th = bbox[3] - bbox[1]
