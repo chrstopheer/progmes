@@ -39,6 +39,10 @@ export function loadSettings() {
 
 export function saveSettings(settings) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  // Notify listeners (e.g. AppHeader) in the same tab
+  try {
+    window.dispatchEvent(new Event("prog-ong:settings-updated"));
+  } catch {}
 }
 
 function loadAllActivities() {
@@ -61,16 +65,41 @@ export function ymKey(year, month) {
 
 export function loadMonth(year, month) {
   const all = loadAllActivities();
-  return all[ymKey(year, month)] || {};
+  const raw = all[ymKey(year, month)] || {};
+  // Normalize: every day value is an array of activity objects.
+  // Backward-compat: wrap legacy single-object entries into an array.
+  const normalized = {};
+  for (const [day, val] of Object.entries(raw)) {
+    if (Array.isArray(val)) {
+      const clean = val.filter((a) => a && typeof a === "object");
+      if (clean.length) normalized[day] = clean;
+    } else if (val && typeof val === "object") {
+      normalized[day] = [val];
+    }
+  }
+  return normalized;
 }
 
-export function saveActivity(year, month, day, activity) {
+export function saveActivities(year, month, day, list) {
   const all = loadAllActivities();
   const k = ymKey(year, month);
   const monthData = all[k] || {};
-  monthData[day] = activity;
-  all[k] = monthData;
+  const clean = (Array.isArray(list) ? list : []).filter(
+    (a) => a && (a.activity || "").trim(),
+  );
+  if (clean.length === 0) {
+    delete monthData[day];
+  } else {
+    monthData[day] = clean;
+  }
+  if (Object.keys(monthData).length === 0) delete all[k];
+  else all[k] = monthData;
   saveAllActivities(all);
+}
+
+// Legacy single-activity helper kept for compatibility with older code paths.
+export function saveActivity(year, month, day, activity) {
+  saveActivities(year, month, day, [activity]);
 }
 
 export function deleteActivity(year, month, day) {
@@ -88,11 +117,16 @@ export function listSavedMonths() {
   return Object.entries(all)
     .map(([k, v]) => {
       const [y, m] = k.split("-");
+      const days = Object.values(v || {});
+      const total = days.reduce(
+        (sum, entries) => sum + (Array.isArray(entries) ? entries.length : 1),
+        0,
+      );
       return {
         key: k,
         year: parseInt(y, 10),
         month: parseInt(m, 10) - 1,
-        count: Object.keys(v || {}).length,
+        count: total,
       };
     })
     .sort((a, b) => (a.key < b.key ? 1 : -1));

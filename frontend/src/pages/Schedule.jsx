@@ -69,7 +69,14 @@ export default function Schedule() {
     };
   }, [monthData, settings]);
 
-  const count = useMemo(() => Object.keys(monthData).length, [monthData]);
+  const count = useMemo(
+    () =>
+      Object.values(monthData).reduce(
+        (sum, entries) => sum + (Array.isArray(entries) ? entries.length : 1),
+        0,
+      ),
+    [monthData],
+  );
 
   const handleDownload = () => {
     downloadMonthPdf({ year: y, month: m, settings, monthData });

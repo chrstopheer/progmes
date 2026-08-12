@@ -1,26 +1,45 @@
 import React from "react";
 import { daysInMonth, weekdayAbbrOfDay, MONTHS_PT } from "../lib/date-utils";
 
-// Live preview of the printable A4 table, matching the model exactly.
-// Uses CSS transform to fit in a preview container width.
+// Live preview of the printable A4 table. When a day has multiple activities,
+// the DATA cells (day number + weekday) are merged via rowSpan.
 export const SchedulePreview = React.forwardRef(function SchedulePreview(
   { year, month, settings, monthData, scale = 1 },
   ref,
 ) {
   const dim = daysInMonth(year, month);
+
   const rows = [];
   for (let d = 1; d <= dim; d++) {
-    const data = monthData?.[d] || {};
-    const isFilled = !!(data.division || data.activity || data.place || data.time);
-    rows.push({
-      day: d,
-      wd: weekdayAbbrOfDay(year, month, d),
-      division: data.division || "",
-      activity: data.activity || "",
-      place: data.place || "",
-      time: data.time || "",
-      isFilled,
-    });
+    const entries = monthData?.[d];
+    const wd = weekdayAbbrOfDay(year, month, d);
+    if (Array.isArray(entries) && entries.length > 0) {
+      entries.forEach((e, idx) => {
+        rows.push({
+          day: d,
+          wd,
+          isFirst: idx === 0,
+          rowSpan: entries.length,
+          division: e.division || "",
+          activity: e.activity || "",
+          place: e.place || "",
+          time: e.time || "",
+          isFilled: true,
+        });
+      });
+    } else {
+      rows.push({
+        day: d,
+        wd,
+        isFirst: true,
+        rowSpan: 1,
+        division: "",
+        activity: "",
+        place: "",
+        time: "",
+        isFilled: false,
+      });
+    }
   }
 
   return (
@@ -58,10 +77,17 @@ export const SchedulePreview = React.forwardRef(function SchedulePreview(
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
-            <tr key={r.day} className={r.isFilled ? "filled" : ""}>
-              <td style={{ width: 30, fontWeight: 600 }}>{r.day}</td>
-              <td style={{ width: 50 }}>{r.wd}</td>
+          {rows.map((r, i) => (
+            <tr key={i} className={r.isFilled ? "filled" : ""}>
+              {r.isFirst && (
+                <td
+                  rowSpan={r.rowSpan}
+                  style={{ width: 30, fontWeight: 600 }}
+                >
+                  {r.day}
+                </td>
+              )}
+              {r.isFirst && <td rowSpan={r.rowSpan} style={{ width: 50 }}>{r.wd}</td>}
               <td>{r.division}</td>
               <td>{r.activity}</td>
               <td>{r.place}</td>

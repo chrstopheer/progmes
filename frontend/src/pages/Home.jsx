@@ -71,7 +71,11 @@ export default function Home() {
     return arr;
   }, [dim, firstWD]);
 
-  const activeCount = Object.keys(monthData).length;
+  const activeCount = Object.values(monthData).reduce(
+    (sum, entries) => sum + (Array.isArray(entries) ? entries.length : 1),
+    0,
+  );
+  const activeDays = Object.keys(monthData).length;
 
   const goPrev = () => {
     if (month === 0) {
@@ -245,7 +249,9 @@ export default function Home() {
                       className="mt-1 text-[9px] sm:text-[10px] font-medium truncate max-w-full px-1"
                       style={{ color: "var(--ink-soft)" }}
                     >
-                      {monthData[d].division || "•"}
+                      {monthData[d].length > 1
+                        ? `${monthData[d].length} atividades`
+                        : monthData[d][0]?.division || "•"}
                     </span>
                   )}
                   {today && (

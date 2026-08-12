@@ -23,12 +23,12 @@ import {
   AlertDialogTrigger,
 } from "../components/ui/alert-dialog";
 import { AppHeader } from "../components/AppHeader";
-import { ArrowLeft, Trash2, Save, Clock, MapPin } from "lucide-react";
+import { ArrowLeft, Trash2, Save, Clock, MapPin, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   loadMonth,
   loadSettings,
-  saveActivity,
+  saveActivities,
   deleteActivity,
 } from "../lib/storage";
 import {
@@ -36,6 +36,149 @@ import {
   weekdayFullOfDay,
   daysInMonth,
 } from "../lib/date-utils";
+
+const EMPTY_ENTRY = { division: "", activity: "", place: "", time: "" };
+const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
+const MINUTES = ["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"];
+
+function EntryCard({ index, total, entry, divisions, onChange, onRemove }) {
+  const setField = (field, value) => onChange({ ...entry, [field]: value });
+  const [hh, mm] = (entry.time || "").split(":");
+
+  return (
+    <div
+      className="rounded-xl border p-4 sm:p-5 space-y-4 relative bg-white"
+      style={{ borderColor: "var(--hairline)" }}
+      data-testid={`activity-entry-${index}`}
+    >
+      <div className="flex items-center justify-between">
+        <span
+          className="text-[11px] uppercase tracking-widest font-semibold"
+          style={{ color: "var(--brand-blue)" }}
+        >
+          Atividade {index + 1} de {total}
+        </span>
+        {total > 1 && (
+          <button
+            type="button"
+            onClick={onRemove}
+            data-testid={`remove-entry-${index}`}
+            className="rounded-full p-2.5 -m-2 hover:bg-red-50 transition min-w-11 min-h-11 flex items-center justify-center"
+            aria-label={`Remover atividade ${index + 1}`}
+          >
+            <X className="h-5 w-5" style={{ color: "var(--brand-red)" }} />
+          </button>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor={`division-${index}`}>Divisão</Label>
+        <Select
+          value={entry.division || ""}
+          onValueChange={(v) => setField("division", v)}
+        >
+          <SelectTrigger id={`division-${index}`} data-testid={`division-select-${index}`}>
+            <SelectValue placeholder="Selecione uma divisão" />
+          </SelectTrigger>
+          <SelectContent>
+            {divisions.map((div) => (
+              <SelectItem
+                key={div}
+                value={div}
+                data-testid={`division-option-${index}-${div}`}
+              >
+                {div}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor={`activity-${index}`}>Atividade</Label>
+        <Textarea
+          id={`activity-${index}`}
+          data-testid={`activity-input-${index}`}
+          rows={2}
+          value={entry.activity}
+          onChange={(e) => setField("activity", e.target.value)}
+          placeholder="Ex: Daimoku da Comunidade Putim - Vitória Total"
+        />
+      </div>
+
+      <div className="grid sm:grid-cols-[1fr_180px] gap-4">
+        <div className="space-y-2">
+          <Label htmlFor={`place-${index}`}>
+            <MapPin className="inline h-3.5 w-3.5 mr-1" /> Local
+          </Label>
+          <Input
+            id={`place-${index}`}
+            data-testid={`place-input-${index}`}
+            value={entry.place}
+            onChange={(e) => setField("place", e.target.value)}
+            placeholder="Ex: Res. Sra. Zilda"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>
+            <Clock className="inline h-3.5 w-3.5 mr-1" /> Horário
+          </Label>
+          <div
+            className="flex items-center gap-2"
+            data-testid={`time-picker-${index}`}
+          >
+            <Select
+              value={hh || ""}
+              onValueChange={(h) =>
+                setField("time", `${h}:${mm || "00"}`)
+              }
+            >
+              <SelectTrigger
+                className="flex-1"
+                data-testid={`time-hour-select-${index}`}
+              >
+                <SelectValue placeholder="HH" />
+              </SelectTrigger>
+              <SelectContent className="max-h-64">
+                {HOURS.map((h) => (
+                  <SelectItem key={h} value={h}>
+                    {h}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span
+              className="text-lg font-semibold"
+              style={{ color: "var(--ink-soft)" }}
+            >
+              :
+            </span>
+            <Select
+              value={mm || ""}
+              onValueChange={(mn) =>
+                setField("time", `${hh || "00"}:${mn}`)
+              }
+            >
+              <SelectTrigger
+                className="flex-1"
+                data-testid={`time-minute-select-${index}`}
+              >
+                <SelectValue placeholder="MM" />
+              </SelectTrigger>
+              <SelectContent className="max-h-64">
+                {MINUTES.map((mn) => (
+                  <SelectItem key={mn} value={mn}>
+                    {mn}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ActivityForm() {
   const { year, month, day } = useParams();
@@ -45,24 +188,25 @@ export default function ActivityForm() {
   const navigate = useNavigate();
 
   const [settings] = useState(loadSettings());
-  const [form, setForm] = useState({
-    division: "",
-    activity: "",
-    place: "",
-    time: "",
-  });
+  const [entries, setEntries] = useState([{ ...EMPTY_ENTRY }]);
   const [existing, setExisting] = useState(false);
 
   useEffect(() => {
     const monthData = loadMonth(y, m);
-    if (monthData[d]) {
-      setForm({
-        division: monthData[d].division || "",
-        activity: monthData[d].activity || "",
-        place: monthData[d].place || "",
-        time: monthData[d].time || "",
-      });
+    const dayData = monthData[d];
+    if (Array.isArray(dayData) && dayData.length > 0) {
+      setEntries(
+        dayData.map((a) => ({
+          division: a.division || "",
+          activity: a.activity || "",
+          place: a.place || "",
+          time: a.time || "",
+        })),
+      );
       setExisting(true);
+    } else {
+      setEntries([{ ...EMPTY_ENTRY }]);
+      setExisting(false);
     }
   }, [y, m, d]);
 
@@ -87,24 +231,38 @@ export default function ActivityForm() {
     );
   }
 
+  const updateEntry = (idx, next) => {
+    setEntries((prev) => prev.map((e, i) => (i === idx ? next : e)));
+  };
+  const addEntry = () => setEntries((prev) => [...prev, { ...EMPTY_ENTRY }]);
+  const removeEntry = (idx) =>
+    setEntries((prev) => (prev.length === 1 ? prev : prev.filter((_, i) => i !== idx)));
+
   const handleSave = () => {
-    if (!form.activity.trim()) {
-      toast.error("Informe pelo menos a atividade.");
+    const cleaned = entries
+      .map((e) => ({
+        division: (e.division || "").trim(),
+        activity: (e.activity || "").trim(),
+        place: (e.place || "").trim(),
+        time: (e.time || "").trim(),
+      }))
+      .filter((e) => e.activity);
+    if (cleaned.length === 0) {
+      toast.error("Informe pelo menos uma atividade.");
       return;
     }
-    saveActivity(y, m, d, {
-      division: form.division.trim(),
-      activity: form.activity.trim(),
-      place: form.place.trim(),
-      time: form.time.trim(),
-    });
-    toast.success("Atividade salva!");
+    saveActivities(y, m, d, cleaned);
+    toast.success(
+      cleaned.length > 1
+        ? `${cleaned.length} atividades salvas!`
+        : "Atividade salva!",
+    );
     navigate(`/?year=${y}&month=${m}`);
   };
 
   const handleDelete = () => {
     deleteActivity(y, m, d);
-    toast.success("Atividade excluída.");
+    toast.success("Atividades excluídas.");
     navigate(`/?year=${y}&month=${m}`);
   };
 
@@ -129,7 +287,7 @@ export default function ActivityForm() {
           style={{ borderColor: "var(--hairline)" }}
           data-testid="activity-form-card"
         >
-          {/* Selected date banner */}
+          {/* Header banner */}
           <div className="flex items-start justify-between gap-3 mb-6">
             <div>
               <div
@@ -144,7 +302,10 @@ export default function ActivityForm() {
                 data-testid="activity-date-heading"
               >
                 Dia {d}
-                <span className="text-lg font-normal ml-2" style={{ color: "var(--ink-soft)" }}>
+                <span
+                  className="text-lg font-normal ml-2"
+                  style={{ color: "var(--ink-soft)" }}
+                >
                   {weekdayFullOfDay(y, m, d)}
                 </span>
               </h1>
@@ -171,105 +332,40 @@ export default function ActivityForm() {
             </div>
           </div>
 
-          <div className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="division">Divisão</Label>
-              <Select
-                value={form.division || undefined}
-                onValueChange={(v) => setForm((f) => ({ ...f, division: v }))}
-              >
-                <SelectTrigger id="division" data-testid="division-select">
-                  <SelectValue placeholder="Selecione uma divisão" />
-                </SelectTrigger>
-                <SelectContent>
-                  {settings.divisions.map((div) => (
-                    <SelectItem key={div} value={div} data-testid={`division-option-${div}`}>
-                      {div}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs" style={{ color: "var(--ink-soft)" }}>
-                As divisões podem ser gerenciadas em Ajustes.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="activity">Atividade</Label>
-              <Textarea
-                id="activity"
-                data-testid="activity-input"
-                rows={2}
-                value={form.activity}
-                onChange={(e) => setForm((f) => ({ ...f, activity: e.target.value }))}
-                placeholder="Ex: Daimoku da Comunidade Putim - Vitória Total"
+          {/* Entries */}
+          <div className="space-y-4">
+            {entries.map((entry, idx) => (
+              <EntryCard
+                key={idx}
+                index={idx}
+                total={entries.length}
+                entry={entry}
+                divisions={settings.divisions}
+                onChange={(next) => updateEntry(idx, next)}
+                onRemove={() => removeEntry(idx)}
               />
-            </div>
-
-            <div className="grid sm:grid-cols-[1fr_180px] gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="place">
-                  <MapPin className="inline h-3.5 w-3.5 mr-1" /> Local
-                </Label>
-                <Input
-                  id="place"
-                  data-testid="place-input"
-                  value={form.place}
-                  onChange={(e) => setForm((f) => ({ ...f, place: e.target.value }))}
-                  placeholder="Ex: Res. Sra. Zilda"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>
-                  <Clock className="inline h-3.5 w-3.5 mr-1" /> Horário
-                </Label>
-                <div className="flex items-center gap-2" data-testid="time-picker">
-                  <Select
-                    value={form.time ? form.time.split(":")[0] : undefined}
-                    onValueChange={(h) => {
-                      const currMin = form.time ? form.time.split(":")[1] : "00";
-                      setForm((f) => ({ ...f, time: `${h}:${currMin}` }));
-                    }}
-                  >
-                    <SelectTrigger className="flex-1" data-testid="time-hour-select">
-                      <SelectValue placeholder="HH" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-64">
-                      {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0")).map((h) => (
-                        <SelectItem key={h} value={h} data-testid={`time-hour-${h}`}>
-                          {h}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <span className="text-lg font-semibold" style={{ color: "var(--ink-soft)" }}>
-                    :
-                  </span>
-                  <Select
-                    value={form.time ? form.time.split(":")[1] : undefined}
-                    onValueChange={(mn) => {
-                      const currHour = form.time ? form.time.split(":")[0] : "00";
-                      setForm((f) => ({ ...f, time: `${currHour}:${mn}` }));
-                    }}
-                  >
-                    <SelectTrigger className="flex-1" data-testid="time-minute-select">
-                      <SelectValue placeholder="MM" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-64">
-                      {["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"].map((mn) => (
-                        <SelectItem key={mn} value={mn} data-testid={`time-minute-${mn}`}>
-                          {mn}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
 
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 mt-8 pt-6 border-t"
-               style={{ borderColor: "var(--hairline)" }}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={addEntry}
+            data-testid="add-entry-btn"
+            className="w-full mt-4 border-dashed h-11"
+            style={{
+              borderColor: "var(--brand-blue)",
+              color: "var(--brand-blue)",
+            }}
+          >
+            <Plus className="h-4 w-4 mr-1" /> Adicionar outra atividade neste dia
+          </Button>
+
+          {/* Actions */}
+          <div
+            className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 mt-8 pt-6 border-t"
+            style={{ borderColor: "var(--hairline)" }}
+          >
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button
@@ -279,18 +375,21 @@ export default function ActivityForm() {
                   style={{ color: "var(--brand-red)" }}
                   disabled={!existing}
                 >
-                  <Trash2 className="h-4 w-4 mr-1" /> Excluir
+                  <Trash2 className="h-4 w-4 mr-1" /> Excluir dia
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Excluir atividade?</AlertDialogTitle>
+                  <AlertDialogTitle>Excluir atividades?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Esta ação removerá a atividade do dia {d} de {MONTHS_PT[m]} de {y}.
+                    Esta ação removerá todas as atividades do dia {d} de{" "}
+                    {MONTHS_PT[m]} de {y}.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel data-testid="delete-cancel-btn">Cancelar</AlertDialogCancel>
+                  <AlertDialogCancel data-testid="delete-cancel-btn">
+                    Cancelar
+                  </AlertDialogCancel>
                   <AlertDialogAction
                     data-testid="delete-confirm-btn"
                     onClick={handleDelete}

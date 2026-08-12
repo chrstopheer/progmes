@@ -50,16 +50,35 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
   // ==== TABLE ====
   const dim = daysInMonth(year, month);
   const body = [];
+  const filledFlags = []; // whether each row belongs to a filled day
   for (let d = 1; d <= dim; d++) {
-    const row = monthData?.[d] || null;
-    body.push([
-      String(d),
-      weekdayAbbrOfDay(year, month, d),
-      row?.division || "",
-      row?.activity || "",
-      row?.place || "",
-      row?.time || "",
-    ]);
+    const entries = monthData?.[d];
+    const wd = weekdayAbbrOfDay(year, month, d);
+    if (Array.isArray(entries) && entries.length > 0) {
+      entries.forEach((e, idx) => {
+        if (idx === 0) {
+          body.push([
+            { content: String(d), rowSpan: entries.length },
+            { content: wd, rowSpan: entries.length },
+            e.division || "",
+            e.activity || "",
+            e.place || "",
+            e.time || "",
+          ]);
+        } else {
+          body.push([
+            e.division || "",
+            e.activity || "",
+            e.place || "",
+            e.time || "",
+          ]);
+        }
+        filledFlags.push(true);
+      });
+    } else {
+      body.push([String(d), wd, "", "", "", ""]);
+      filledFlags.push(false);
+    }
   }
 
   autoTable(doc, {
@@ -98,15 +117,14 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
     },
     didParseCell: (data) => {
       if (data.section === "body") {
-        const row = body[data.row.index];
-        const isFilled = !!(row[2] || row[3] || row[4] || row[5]);
+        const isFilled = filledFlags[data.row.index];
         if (isFilled) {
           data.cell.styles.fillColor = [220, 231, 246];
         } else {
           data.cell.styles.fillColor = [255, 255, 255];
         }
       }
-      // merge visual: put "DATA" header above both date & weekday columns
+      // hide the duplicate header for column index 1 (DATA is colSpan of 2)
       if (data.section === "head" && data.column.index === 1) {
         data.cell.text = [""];
       }
