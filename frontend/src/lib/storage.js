@@ -11,7 +11,7 @@ export const DEFAULT_DIVISIONS = ["DE", "DFJ", "DMJ", "DF", "DS", "5 Div."];
 export const DEFAULT_SETTINGS = {
   header: {
     title: "Programação de Atividades",
-    community: "Comunidade",
+    community: "",
     quote:
       '"Ano do Vibrante Desenvolvimento da Soka Gakkai de Força Jovem Mundial"',
   },
@@ -24,10 +24,15 @@ export function loadSettings() {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (!raw) return { ...DEFAULT_SETTINGS };
     const parsed = JSON.parse(raw);
+    const storedHeader = parsed.header || {};
+    // Migrate the old default value so existing users also see an empty field.
+    const community = storedHeader.community === "Comunidade"
+      ? ""
+      : storedHeader.community ?? "";
     return {
       ...DEFAULT_SETTINGS,
       ...parsed,
-      header: { ...DEFAULT_SETTINGS.header, ...(parsed.header || {}) },
+      header: { ...DEFAULT_SETTINGS.header, ...storedHeader, community },
       divisions: Array.isArray(parsed.divisions) && parsed.divisions.length
         ? parsed.divisions
         : DEFAULT_DIVISIONS,
