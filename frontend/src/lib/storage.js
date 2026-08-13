@@ -13,7 +13,7 @@ export const DEFAULT_SETTINGS = {
     title: "Programação de Atividades",
     community: "",
     quote:
-      '"Ano do Vibrante Desenvolvimento da Soka Gakkai de Força Jovem Mundial"',
+      '\"Ano do Vibrante Desenvolvimento da Soka Gakkai de Força Jovem Mundial\"',
   },
   footer: "Todas as Segundas - Daimoku das Hortências",
   divisions: DEFAULT_DIVISIONS,
@@ -100,6 +100,36 @@ export function saveActivities(year, month, day, list) {
   if (Object.keys(monthData).length === 0) delete all[k];
   else all[k] = monthData;
   saveAllActivities(all);
+}
+
+// Returns unique activity/place values already saved by the user, ranked by
+// prefix matches first and then by substring matches.
+export function getSavedSuggestions(field, query, limit = 6) {
+  if (field !== "activity" && field !== "place") return [];
+  const q = String(query || "").trim().toLocaleLowerCase("pt-BR");
+  if (!q) return [];
+
+  const all = loadAllActivities();
+  const values = [];
+  for (const monthData of Object.values(all)) {
+    for (const dayEntries of Object.values(monthData || {})) {
+      const entries = Array.isArray(dayEntries) ? dayEntries : [dayEntries];
+      for (const entry of entries) {
+        const value = String(entry?.[field] || "").trim();
+        if (value) values.push(value);
+      }
+    }
+  }
+
+  const unique = [...new Map(values.map((value) => [value.toLocaleLowerCase("pt-BR"), value])).values()];
+  const prefix = [];
+  const contains = [];
+  for (const value of unique) {
+    const lower = value.toLocaleLowerCase("pt-BR");
+    if (lower.startsWith(q)) prefix.push(value);
+    else if (lower.includes(q)) contains.push(value);
+  }
+  return [...prefix, ...contains].slice(0, limit);
 }
 
 // Legacy single-activity helper kept for compatibility with older code paths.
