@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import Home from "./pages/Home";
 import ActivityForm from "./pages/ActivityForm";
 import Schedule from "./pages/Schedule";
+import HistorySuggestions from "./components/HistorySuggestions";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="/atividade/:year/:month/:day" element={<ActivityForm />} />
           <Route path="/programacao/:year/:month" element={<Schedule />} />
         </Routes>
+        <HistorySuggestions />
       </BrowserRouter>
       <Toaster
         position="top-center"
