@@ -11,7 +11,7 @@ export const DEFAULT_DIVISIONS = ["DE", "DFJ", "DMJ", "DF", "DS", "5 Div."];
 export const DEFAULT_SETTINGS = {
   header: {
     title: "Programação de Atividades",
-    community: "Comunidade Putim",
+    community: "Comunidade",
     quote:
       '"Ano do Vibrante Desenvolvimento da Soka Gakkai de Força Jovem Mundial"',
   },
