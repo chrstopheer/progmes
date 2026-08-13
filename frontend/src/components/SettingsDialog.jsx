@@ -16,7 +16,7 @@ import { Plus, X } from "lucide-react";
 import { loadSettings, saveSettings, DEFAULT_SETTINGS } from "../lib/storage";
 import { toast } from "sonner";
 
-export function SettingsDialog({ open, onOpenChange, onSaved }) {
+export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear }) {
   const [settings, setSettings] = useState(loadSettings());
   const [newDivision, setNewDivision] = useState("");
 
@@ -96,7 +96,7 @@ export function SettingsDialog({ open, onOpenChange, onSaved }) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="h-quote">Frase do ano</Label>
+              <Label htmlFor="h-quote">Lema {selectedYear}</Label>
               <Textarea
                 id="h-quote"
                 data-testid="setting-header-quote"
