@@ -347,6 +347,7 @@ export default function Home() {
         open={openSettings}
         onOpenChange={setOpenSettings}
         onSaved={refreshData}
+        selectedYear={year}
       />
     </div>
   );
