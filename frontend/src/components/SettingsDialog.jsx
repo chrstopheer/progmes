@@ -90,6 +90,7 @@ export function SettingsDialog({ open, onOpenChange, onSaved }) {
               <Input
                 id="h-community"
                 data-testid="setting-header-community"
+                placeholder="Ex: Comunidade Esperança"
                 value={settings.header.community}
                 onChange={(e) => updateHeader("community", e.target.value)}
               />
