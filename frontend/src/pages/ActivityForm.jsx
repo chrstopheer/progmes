@@ -114,6 +114,9 @@ function EntryCard({ index, total, entry, divisions, onChange, onRemove }) {
           <Input
             id={`place-${index}`}
             data-testid={`place-input-${index}`}
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
             value={entry.place}
             onChange={(e) => setField("place", e.target.value)}
             placeholder="Ex: Res. Sra. Zilda"
