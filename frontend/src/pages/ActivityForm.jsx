@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Select,
@@ -41,12 +41,13 @@ const EMPTY_ENTRY = { division: "", activity: "", place: "", time: "" };
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
 const MINUTES = ["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"];
 
-function EntryCard({ index, total, entry, divisions, onChange, onRemove }) {
+function EntryCard({ index, total, entry, divisions, onChange, onRemove, cardRef }) {
   const setField = (field, value) => onChange({ ...entry, [field]: value });
   const [hh, mm] = (entry.time || "").split(":");
 
   return (
     <div
+      ref={cardRef}
       className="rounded-xl border p-4 sm:p-5 space-y-4 relative bg-white"
       style={{ borderColor: "var(--hairline)" }}
       data-testid={`activity-entry-${index}`}
@@ -193,6 +194,8 @@ export default function ActivityForm() {
   const [settings] = useState(loadSettings());
   const [entries, setEntries] = useState([{ ...EMPTY_ENTRY }]);
   const [existing, setExisting] = useState(false);
+  const entryRefs = useRef([]);
+  const shouldScrollToNewEntry = useRef(false);
 
   useEffect(() => {
     const monthData = loadMonth(y, m);
@@ -212,6 +215,19 @@ export default function ActivityForm() {
       setExisting(false);
     }
   }, [y, m, d]);
+
+  useEffect(() => {
+    if (!shouldScrollToNewEntry.current) return;
+
+    shouldScrollToNewEntry.current = false;
+    const newEntry = entryRefs.current[entries.length - 1];
+    if (!newEntry) return;
+
+    requestAnimationFrame(() => {
+      newEntry.scrollIntoView({ behavior: "smooth", block: "center" });
+      newEntry.querySelector("textarea")?.focus();
+    });
+  }, [entries.length]);
 
   const invalidDate =
     Number.isNaN(y) ||
@@ -237,7 +253,10 @@ export default function ActivityForm() {
   const updateEntry = (idx, next) => {
     setEntries((prev) => prev.map((e, i) => (i === idx ? next : e)));
   };
-  const addEntry = () => setEntries((prev) => [...prev, { ...EMPTY_ENTRY }]);
+  const addEntry = () => {
+    shouldScrollToNewEntry.current = true;
+    setEntries((prev) => [...prev, { ...EMPTY_ENTRY }]);
+  };
   const removeEntry = (idx) =>
     setEntries((prev) => (prev.length === 1 ? prev : prev.filter((_, i) => i !== idx)));
 
@@ -346,6 +365,9 @@ export default function ActivityForm() {
                 divisions={settings.divisions}
                 onChange={(next) => updateEntry(idx, next)}
                 onRemove={() => removeEntry(idx)}
+                cardRef={(element) => {
+                  entryRefs.current[idx] = element;
+                }}
               />
             ))}
           </div>
