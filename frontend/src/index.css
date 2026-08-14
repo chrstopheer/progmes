@@ -167,7 +167,7 @@ body {
     font-size: 12px;
 }
 .preview-header .h-quote {
-    color: var(--brand-red);
+    color: #111;
     font-weight: 700;
     font-size: 12px;
 }
