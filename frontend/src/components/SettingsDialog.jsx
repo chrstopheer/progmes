@@ -11,38 +11,33 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { Plus, X } from "lucide-react";
 import { loadSettings, saveSettings, DEFAULT_SETTINGS } from "../lib/storage";
 import { toast } from "sonner";
 
+const COMMUNITY_DEFAULT = "Comunidade Exemplo";
+
+function settingsWithCommunityDefault(settings) {
+  if (settings?.header?.community) return settings;
+  return {
+    ...settings,
+    header: {
+      ...settings.header,
+      community: COMMUNITY_DEFAULT,
+    },
+  };
+}
+
 export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear }) {
-  const [settings, setSettings] = useState(loadSettings());
-  const [newDivision, setNewDivision] = useState("");
+  const [settings, setSettings] = useState(() =>
+    settingsWithCommunityDefault(loadSettings()),
+  );
 
   useEffect(() => {
-    if (open) setSettings(loadSettings());
+    if (open) setSettings(settingsWithCommunityDefault(loadSettings()));
   }, [open]);
 
   const updateHeader = (field, value) =>
     setSettings((s) => ({ ...s, header: { ...s.header, [field]: value } }));
-
-  const addDivision = () => {
-    const v = newDivision.trim();
-    if (!v) return;
-    if (settings.divisions.includes(v)) {
-      toast.error("Essa divisão já existe.");
-      return;
-    }
-    setSettings((s) => ({ ...s, divisions: [...s.divisions, v] }));
-    setNewDivision("");
-  };
-
-  const removeDivision = (d) =>
-    setSettings((s) => ({
-      ...s,
-      divisions: s.divisions.filter((x) => x !== d),
-    }));
 
   const handleSave = () => {
     saveSettings(settings);
@@ -52,7 +47,13 @@ export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear }) {
   };
 
   const handleReset = () => {
-    setSettings({ ...DEFAULT_SETTINGS });
+    setSettings({
+      ...DEFAULT_SETTINGS,
+      header: {
+        ...DEFAULT_SETTINGS.header,
+        community: COMMUNITY_DEFAULT,
+      },
+    });
   };
 
   return (
@@ -64,7 +65,7 @@ export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear }) {
         <DialogHeader>
           <DialogTitle className="font-display">Ajustes</DialogTitle>
           <DialogDescription>
-            Personalize cabeçalho, rodapé e divisões usadas nas atividades.
+            Personalize cabeçalho e rodapé usados na programação.
           </DialogDescription>
         </DialogHeader>
 
@@ -90,7 +91,6 @@ export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear }) {
               <Input
                 id="h-community"
                 data-testid="setting-header-community"
-                placeholder="Ex: Comunidade Esperança"
                 value={settings.header.community}
                 onChange={(e) => updateHeader("community", e.target.value)}
               />
@@ -123,62 +123,6 @@ export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear }) {
                 setSettings((s) => ({ ...s, footer: e.target.value }))
               }
             />
-          </section>
-
-          <section className="space-y-3">
-            <h3
-              className="text-sm font-semibold uppercase tracking-wider"
-              style={{ color: "var(--brand-blue)" }}
-            >
-              Divisões
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {settings.divisions.map((d) => (
-                <Badge
-                  key={d}
-                  data-testid={`division-chip-${d}`}
-                  variant="secondary"
-                  className="pl-3 pr-1 py-1 gap-1 text-sm"
-                  style={{
-                    background: "var(--brand-blue-soft)",
-                    color: "var(--brand-blue)",
-                  }}
-                >
-                  {d}
-                  <button
-                    type="button"
-                    data-testid={`remove-division-${d}`}
-                    onClick={() => removeDivision(d)}
-                    className="ml-1 rounded-full hover:bg-white/60 p-0.5"
-                    aria-label={`Remover ${d}`}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </Badge>
-              ))}
-              {settings.divisions.length === 0 && (
-                <span className="text-sm text-muted-foreground">
-                  Nenhuma divisão cadastrada.
-                </span>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                data-testid="new-division-input"
-                placeholder="Ex: DE, DFJ, DMJ…"
-                value={newDivision}
-                onChange={(e) => setNewDivision(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addDivision())}
-              />
-              <Button
-                type="button"
-                data-testid="add-division-btn"
-                onClick={addDivision}
-                style={{ background: "var(--brand-blue)", color: "white" }}
-              >
-                <Plus className="h-4 w-4 mr-1" /> Adicionar
-              </Button>
-            </div>
           </section>
         </div>
 
