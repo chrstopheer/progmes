@@ -89,15 +89,39 @@ export default function HistorySuggestions() {
       dropdown.style.width = `${rect.width}px`;
     };
 
+    const scrollInputIntoView = (input) => {
+      if (!input || !input.isConnected) return;
+
+      // Aguarda o teclado virtual terminar de abrir antes de calcular
+      // a área realmente visível do dispositivo.
+      window.setTimeout(() => {
+        if (!input.isConnected) return;
+
+        const viewport = window.visualViewport;
+        const visibleBottom = viewport
+          ? viewport.offsetTop + viewport.height
+          : window.innerHeight;
+        const rect = input.getBoundingClientRect();
+        const suggestionHeight = 56;
+        const margin = 12;
+
+        // Se o campo ou a área reservada para a sugestão ficar atrás
+        // do teclado, rola a página apenas o necessário para exibi-los.
+        const requiredBottom = rect.bottom + suggestionHeight + margin;
+
+        if (requiredBottom > visibleBottom) {
+          const amount = requiredBottom - visibleBottom;
+          window.scrollBy({
+            top: amount,
+            behavior: "smooth",
+          });
+        }
+      }, 120);
+    };
+
     /*
      * Atualiza o valor real do input de forma compatível
      * com campos controlados pelo React.
-     *
-     * Isso é importante porque apenas fazer:
-     * input.value = suggestion
-     *
-     * altera a aparência do campo, mas não necessariamente
-     * altera o estado interno do React.
      */
     const setReactValue = (input, value) => {
       const prototype =
@@ -195,18 +219,10 @@ export default function HistorySuggestions() {
         });
 
         option.addEventListener("mousedown", (event) => {
-          /*
-           * Impede o input de perder o foco antes de
-           * aplicarmos a sugestão.
-           */
           event.preventDefault();
 
           if (!activeInput) return;
 
-          /*
-           * Agora o valor é enviado corretamente para
-           * o estado controlado pelo React.
-           */
           setReactValue(activeInput, suggestion);
 
           hide();
@@ -219,6 +235,7 @@ export default function HistorySuggestions() {
 
       document.body.appendChild(dropdown);
 
+      scrollInputIntoView(input);
       position();
     };
 
