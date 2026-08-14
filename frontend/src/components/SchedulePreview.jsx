@@ -58,7 +58,9 @@ export const SchedulePreview = React.forwardRef(function SchedulePreview(
         <div className="h-title">
           {settings.header.title} - {MONTHS_PT[month]}
         </div>
-        <div className="h-sub">{settings.header.community}</div>
+        <div className="h-sub">
+          {settings.header.community || "Comunidade Exemplo"}
+        </div>
         <div className="h-quote">
           {year} - {settings.header.quote}
         </div>
