@@ -43,7 +43,6 @@ export default function Home() {
   const [savedMonths, setSavedMonths] = useState([]);
   const navigate = useNavigate();
 
-  // Keep URL in sync so back-navigation preserves the view
   useEffect(() => {
     setSearchParams({ year: String(year), month: String(month) }, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -60,7 +59,7 @@ export default function Home() {
   }, [year, month]);
 
   const dim = daysInMonth(year, month);
-  const firstWD = firstWeekday(year, month); // 0=Sun
+  const firstWD = firstWeekday(year, month);
   const cells = useMemo(() => {
     const arr = [];
     for (let i = 0; i < firstWD; i++) arr.push(null);
@@ -73,7 +72,6 @@ export default function Home() {
     (sum, entries) => sum + (Array.isArray(entries) ? entries.length : 1),
     0,
   );
-  const activeDays = Object.keys(monthData).length;
 
   return (
     <div className="min-h-screen bg-paper">
@@ -86,6 +84,7 @@ export default function Home() {
               onClick={() => setOpenSettings(true)}
               data-testid="open-settings-btn"
               aria-label="Ajustes"
+              className="bg-[var(--brand-yellow)] text-[var(--ink)] hover:bg-[var(--brand-yellow)]"
             >
               <Settings2 className="h-4 w-4 mr-1" /> Cabeçalho
             </Button>
@@ -94,7 +93,6 @@ export default function Home() {
       />
 
       <main className="max-w-4xl mx-auto p-4 sm:p-6 space-y-6">
-        {/* Selectors */}
         <section
           className="rounded-2xl bg-white border shadow-sm p-5 sm:p-6"
           style={{ borderColor: "var(--hairline)" }}
@@ -161,7 +159,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Calendar Grid */}
         <section
           className="rounded-2xl bg-white border shadow-sm p-4 sm:p-6"
           style={{ borderColor: "var(--hairline)" }}
@@ -178,10 +175,7 @@ export default function Home() {
               </div>
             ))}
           </div>
-          <div
-            className="grid grid-cols-7 gap-1 sm:gap-2"
-            data-testid="calendar-grid"
-          >
+          <div className="grid grid-cols-7 gap-1 sm:gap-2" data-testid="calendar-grid">
             {cells.map((d, idx) => {
               if (d === null) return <div key={idx} className="aspect-square" />;
               const filled = !!monthData[d];
@@ -201,30 +195,16 @@ export default function Home() {
                     borderWidth: today ? 2 : 1,
                   }}
                 >
-                  <span
-                    className="text-base sm:text-lg font-semibold leading-none"
-                    style={{
-                      color: filled ? "var(--brand-blue)" : "var(--ink)",
-                    }}
-                  >
+                  <span className="text-base sm:text-lg font-semibold leading-none" style={{ color: filled ? "var(--brand-blue)" : "var(--ink)" }}>
                     {d}
                   </span>
                   {filled && (
-                    <span
-                      className="mt-1 text-[9px] sm:text-[10px] font-medium truncate max-w-full px-1"
-                      style={{ color: "var(--ink-soft)" }}
-                    >
-                      {monthData[d].length > 1
-                        ? `${monthData[d].length} atividades`
-                        : monthData[d][0]?.division || "•"}
+                    <span className="mt-1 text-[9px] sm:text-[10px] font-medium truncate max-w-full px-1" style={{ color: "var(--ink-soft)" }}>
+                      {monthData[d].length > 1 ? `${monthData[d].length} atividades` : monthData[d][0]?.division || "•"}
                     </span>
                   )}
                   {today && (
-                    <span
-                      className="absolute -top-1.5 -right-1.5 h-3 w-3 rounded-full"
-                      style={{ background: "var(--brand-red)" }}
-                      aria-label="Hoje"
-                    />
+                    <span className="absolute -top-1.5 -right-1.5 h-3 w-3 rounded-full" style={{ background: "var(--brand-red)" }} aria-label="Hoje" />
                   )}
                 </button>
               );
@@ -233,23 +213,16 @@ export default function Home() {
 
           <div className="flex flex-wrap items-center gap-4 mt-5 text-xs" style={{ color: "var(--ink-soft)" }}>
             <div className="flex items-center gap-2">
-              <span
-                className="inline-block h-3 w-3 rounded border"
-                style={{ background: "var(--brand-blue-soft)", borderColor: "var(--hairline)" }}
-              />
+              <span className="inline-block h-3 w-3 rounded border" style={{ background: "var(--brand-blue-soft)", borderColor: "var(--hairline)" }} />
               Dia com atividade
             </div>
             <div className="flex items-center gap-2">
-              <span
-                className="inline-block h-3 w-3 rounded-full"
-                style={{ background: "var(--brand-red)" }}
-              />
+              <span className="inline-block h-3 w-3 rounded-full" style={{ background: "var(--brand-red)" }} />
               Hoje
             </div>
           </div>
         </section>
 
-        {/* Action bar */}
         <section className="flex flex-col sm:flex-row gap-3 sm:justify-between">
           <Button
             onClick={() => navigate(`/programacao/${year}/${month}`)}
@@ -262,13 +235,8 @@ export default function Home() {
           </Button>
         </section>
 
-        {/* Saved months list */}
         {savedMonths.length > 0 && (
-          <section
-            className="rounded-2xl bg-white border shadow-sm p-5"
-            style={{ borderColor: "var(--hairline)" }}
-            data-testid="saved-months-section"
-          >
+          <section className="rounded-2xl bg-white border shadow-sm p-5" style={{ borderColor: "var(--hairline)" }} data-testid="saved-months-section">
             <div className="flex items-center gap-2 mb-3">
               <Archive className="h-4 w-4" style={{ color: "var(--brand-blue)" }} />
               <h2 className="font-display text-lg">Programações salvas</h2>
@@ -277,28 +245,13 @@ export default function Home() {
               {savedMonths.map((sm) => (
                 <button
                   key={sm.key}
-                  onClick={() => {
-                    setYear(sm.year);
-                    setMonth(sm.month);
-                  }}
+                  onClick={() => { setYear(sm.year); setMonth(sm.month); }}
                   data-testid={`saved-month-${sm.key}`}
                   className="rounded-lg border px-3 py-2 text-sm hover:shadow-sm transition"
-                  style={{
-                    borderColor: "var(--hairline)",
-                    background:
-                      sm.year === year && sm.month === month
-                        ? "var(--brand-yellow-soft)"
-                        : "white",
-                  }}
+                  style={{ borderColor: "var(--hairline)", background: sm.year === year && sm.month === month ? "var(--brand-yellow-soft)" : "white" }}
                 >
-                  <span className="font-medium">
-                    {MONTHS_PT[sm.month]} {sm.year}
-                  </span>
-                  <Badge
-                    variant="secondary"
-                    className="ml-2"
-                    style={{ background: "var(--brand-blue-soft)", color: "var(--brand-blue)" }}
-                  >
+                  <span className="font-medium">{MONTHS_PT[sm.month]} {sm.year}</span>
+                  <Badge variant="secondary" className="ml-2" style={{ background: "var(--brand-blue-soft)", color: "var(--brand-blue)" }}>
                     {sm.count}
                   </Badge>
                 </button>
@@ -308,12 +261,7 @@ export default function Home() {
         )}
       </main>
 
-      <SettingsDialog
-        open={openSettings}
-        onOpenChange={setOpenSettings}
-        onSaved={refreshData}
-        selectedYear={year}
-      />
+      <SettingsDialog open={openSettings} onOpenChange={setOpenSettings} onSaved={refreshData} selectedYear={year} />
     </div>
   );
 }
