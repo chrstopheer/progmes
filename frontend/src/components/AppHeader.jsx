@@ -52,7 +52,7 @@ export function AppHeader({ right, subtitle }) {
               style={{ color: "var(--ink-soft)" }}
               data-testid="app-header-community"
             >
-              {community || "Comunidade"}
+              {community}
             </div>
           </div>
         </div>
