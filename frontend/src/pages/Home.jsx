@@ -102,7 +102,7 @@ export default function Home() {
               data-testid="open-settings-btn"
               aria-label="Ajustes"
             >
-              <Settings2 className="h-4 w-4 mr-1" /> Cabeçalho e Rodapé
+              <Settings2 className="h-4 w-4 mr-1" /> Cabeçalho
             </Button>
           </div>
         }
