@@ -17,10 +17,9 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
   const margin = 20;
   const contentWidth = pageWidth - margin * 2;
 
-  // Keep PDF colors synchronized with the printable preview.
+  // Colors synchronized with the printable preview in index.css.
   const COLORS = {
     yellow: [244, 196, 48],
-    red: [192, 57, 43],
     blueRow: [220, 231, 246],
     ink: [17, 17, 17],
     border: [51, 51, 51],
@@ -41,7 +40,7 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
   doc.text(`${settings.header.title} - ${MONTHS_PT[month]}`, pageWidth / 2, cursorY + 17, { align: "center" });
   doc.setFontSize(10);
   doc.text(settings.header.community || "Comunidade Exemplo", pageWidth / 2, cursorY + 32, { align: "center" });
-  doc.setTextColor(...COLORS.red);
+  doc.setTextColor(...COLORS.ink);
   doc.setFontSize(10);
   const quoteLine = `${year} - ${settings.header.quote || ""}`.trim();
   doc.text(quoteLine, pageWidth / 2, cursorY + 48, { align: "center" });
@@ -76,8 +75,6 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
     }
   }
 
-  // Give HORÁRIO enough width for its 10pt heading while keeping the
-  // overall A4 table width unchanged. The small reduction comes from ACTIVITY.
   const columnWidths = [32, 42, 62, 255, 105, 56];
   const widthSum = columnWidths.reduce((sum, width) => sum + width, 0);
   const widthScale = contentWidth / widthSum;
@@ -104,7 +101,7 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
     },
     headStyles: {
       fillColor: COLORS.yellow,
-      textColor: COLORS.red,
+      textColor: COLORS.ink,
       fontStyle: "bold",
       fontSize: 10,
       halign: "center",
@@ -135,7 +132,7 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
     doc.setDrawColor(...COLORS.border);
     doc.setLineWidth(0.8);
     doc.rect(margin, y, contentWidth, footerH, "FD");
-    doc.setTextColor(...COLORS.red);
+    doc.setTextColor(...COLORS.ink);
     doc.setFont("helvetica", "bolditalic");
     doc.setFontSize(10);
     doc.text(footerText, pageWidth / 2, y + 13, { align: "center" });
