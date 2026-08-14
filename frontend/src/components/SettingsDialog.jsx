@@ -28,6 +28,13 @@ function settingsWithCommunityDefault(settings) {
   };
 }
 
+const textInputProps = {
+  autoComplete: "off",
+  autoCorrect: "off",
+  autoCapitalize: "none",
+  spellCheck: false,
+};
+
 export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear }) {
   const [settings, setSettings] = useState(() =>
     settingsWithCommunityDefault(loadSettings()),
@@ -133,6 +140,7 @@ export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear }) {
                 data-testid="setting-header-title"
                 value={settings.header.title}
                 onChange={(e) => updateHeader("title", e.target.value)}
+                {...textInputProps}
               />
             </div>
             <div className="space-y-2">
@@ -142,6 +150,7 @@ export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear }) {
                 data-testid="setting-header-community"
                 value={settings.header.community}
                 onChange={(e) => updateHeader("community", e.target.value)}
+                {...textInputProps}
               />
             </div>
             <div className="space-y-2">
@@ -152,6 +161,7 @@ export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear }) {
                 rows={2}
                 value={settings.header.quote}
                 onChange={(e) => updateHeader("quote", e.target.value)}
+                {...textInputProps}
               />
             </div>
           </section>
@@ -171,6 +181,7 @@ export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear }) {
               onChange={(e) =>
                 setSettings((s) => ({ ...s, footer: e.target.value }))
               }
+              {...textInputProps}
             />
           </section>
         </div>
