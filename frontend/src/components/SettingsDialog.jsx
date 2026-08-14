@@ -38,8 +38,6 @@ export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear }) {
   useEffect(() => {
     if (!open) return;
 
-    // Create a history entry while the dialog is open so Android/browser
-    // Back closes the dialog instead of navigating away from the Home screen.
     window.history.pushState(
       { ...(window.history.state || {}), settingsDialog: SETTINGS_HISTORY_STATE },
       "",
@@ -183,6 +181,7 @@ export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear }) {
             variant="ghost"
             data-testid="settings-reset-btn"
             onClick={handleReset}
+            style={{ background: "var(--brand-yellow)", color: "var(--ink)" }}
           >
             Restaurar padrão
           </Button>
