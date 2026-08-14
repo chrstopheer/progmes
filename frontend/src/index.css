@@ -129,7 +129,7 @@ body {
 }
 .preview-table thead th {
     background: var(--brand-yellow);
-    color: var(--brand-red);
+    color: #111;
     font-weight: 700;
     font-size: 10px;
     text-align: center;
@@ -151,7 +151,7 @@ body {
 .preview-footer {
     border-top: none;
     border-bottom: 1px solid #333;
-    color: var(--brand-red);
+    color: #111;
     font-weight: 700;
     font-style: italic;
     font-size: 11px;
