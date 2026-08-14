@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +15,7 @@ import { loadSettings, saveSettings, DEFAULT_SETTINGS } from "../lib/storage";
 import { toast } from "sonner";
 
 const COMMUNITY_DEFAULT = "Comunidade Exemplo";
+const SETTINGS_HISTORY_STATE = "progmes-settings-dialog";
 
 function settingsWithCommunityDefault(settings) {
   if (settings?.header?.community) return settings;
@@ -31,10 +32,60 @@ export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear }) {
   const [settings, setSettings] = useState(() =>
     settingsWithCommunityDefault(loadSettings()),
   );
+  const historyEntryAdded = useRef(false);
+  const handlingPopState = useRef(false);
+
+  useEffect(() => {
+    if (!open) return;
+
+    // Create a history entry while the dialog is open so Android/browser
+    // Back closes the dialog instead of navigating away from the Home screen.
+    window.history.pushState(
+      { ...(window.history.state || {}), settingsDialog: SETTINGS_HISTORY_STATE },
+      "",
+      window.location.href,
+    );
+    historyEntryAdded.current = true;
+
+    const handlePopState = () => {
+      handlingPopState.current = true;
+      historyEntryAdded.current = false;
+      onOpenChange(false);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [open, onOpenChange]);
 
   useEffect(() => {
     if (open) setSettings(settingsWithCommunityDefault(loadSettings()));
   }, [open]);
+
+  const closeDialog = () => {
+    if (handlingPopState.current) {
+      handlingPopState.current = false;
+      onOpenChange(false);
+      return;
+    }
+
+    if (historyEntryAdded.current && window.history.state?.settingsDialog === SETTINGS_HISTORY_STATE) {
+      historyEntryAdded.current = false;
+      window.history.back();
+      return;
+    }
+
+    onOpenChange(false);
+  };
+
+  const handleDialogOpenChange = (nextOpen) => {
+    if (nextOpen) {
+      onOpenChange(true);
+      return;
+    }
+    closeDialog();
+  };
 
   const updateHeader = (field, value) =>
     setSettings((s) => ({ ...s, header: { ...s.header, [field]: value } }));
@@ -42,7 +93,7 @@ export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear }) {
   const handleSave = () => {
     saveSettings(settings);
     toast.success("Ajustes salvos!");
-    onOpenChange(false);
+    closeDialog();
     onSaved && onSaved(settings);
   };
 
@@ -57,7 +108,7 @@ export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear }) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent
         data-testid="settings-dialog"
         className="max-w-lg max-h-[90vh] overflow-y-auto"
@@ -139,7 +190,7 @@ export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear }) {
             <Button
               variant="outline"
               data-testid="settings-cancel-btn"
-              onClick={() => onOpenChange(false)}
+              onClick={closeDialog}
             >
               Cancelar
             </Button>
