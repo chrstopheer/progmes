@@ -120,7 +120,7 @@ function EntryCard({ index, total, entry, divisions, onChange, onRemove, cardRef
             spellCheck={false}
             value={entry.place}
             onChange={(e) => setField("place", e.target.value)}
-            placeholder="Ex: Res. Sra. Ana"
+            placeholder="Ex: Res. Sra. Exemplo"
           />
         </div>
         <div className="space-y-2">
