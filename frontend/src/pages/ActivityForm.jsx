@@ -103,7 +103,7 @@ function EntryCard({ index, total, entry, divisions, onChange, onRemove, cardRef
           rows={2}
           value={entry.activity}
           onChange={(e) => setField("activity", e.target.value)}
-          placeholder="Ex: Daimoku da Comunidade Putim - Vitória Total"
+          placeholder="Ex: Daimoku da Comunidade Exemplo - Vitória Total"
         />
       </div>
 
