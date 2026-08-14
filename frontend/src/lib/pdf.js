@@ -17,21 +17,31 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
   const margin = 20;
   const contentWidth = pageWidth - margin * 2;
 
+  // Keep PDF colors synchronized with the printable preview.
+  const COLORS = {
+    yellow: [244, 196, 48],
+    red: [192, 57, 43],
+    blueRow: [220, 231, 246],
+    ink: [17, 17, 17],
+    border: [51, 51, 51],
+    white: [255, 255, 255],
+  };
+
   // ==== HEADER BLOCK (yellow) ====
   let cursorY = margin;
   const headerHeight = 58;
-  doc.setFillColor(244, 196, 48);
-  doc.setDrawColor(51, 51, 51);
+  doc.setFillColor(...COLORS.yellow);
+  doc.setDrawColor(...COLORS.border);
   doc.setLineWidth(0.8);
   doc.rect(margin, cursorY, contentWidth, headerHeight, "FD");
 
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(17, 17, 17);
+  doc.setTextColor(...COLORS.ink);
   doc.setFontSize(13);
   doc.text(`${settings.header.title} - ${MONTHS_PT[month]}`, pageWidth / 2, cursorY + 17, { align: "center" });
   doc.setFontSize(10);
-  doc.text(settings.header.community || "", pageWidth / 2, cursorY + 32, { align: "center" });
-  doc.setTextColor(192, 57, 43);
+  doc.text(settings.header.community || "Comunidade Exemplo", pageWidth / 2, cursorY + 32, { align: "center" });
+  doc.setTextColor(...COLORS.red);
   doc.setFontSize(10);
   const quoteLine = `${year} - ${settings.header.quote || ""}`.trim();
   doc.text(quoteLine, pageWidth / 2, cursorY + 48, { align: "center" });
@@ -83,9 +93,9 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
     styles: {
       font: "helvetica",
       fontSize: 10,
-      textColor: [17, 17, 17],
+      textColor: COLORS.ink,
       cellPadding: 1.2,
-      lineColor: [51, 51, 51],
+      lineColor: COLORS.border,
       lineWidth: 0.4,
       overflow: "ellipsize",
       valign: "middle",
@@ -93,15 +103,15 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
       minCellHeight: 14,
     },
     headStyles: {
-      fillColor: [244, 196, 48],
-      textColor: [192, 57, 43],
+      fillColor: COLORS.yellow,
+      textColor: COLORS.red,
       fontStyle: "bold",
       fontSize: 10,
       halign: "center",
       valign: "middle",
       cellPadding: 1.5,
       minCellHeight: 16,
-      lineColor: [51, 51, 51],
+      lineColor: COLORS.border,
       lineWidth: 0.5,
     },
     columnStyles: Object.fromEntries(
@@ -110,8 +120,8 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
     didParseCell: (data) => {
       if (data.section === "body") {
         data.cell.styles.fillColor = filledFlags[data.row.index]
-          ? [220, 231, 246]
-          : [255, 255, 255];
+          ? COLORS.blueRow
+          : COLORS.white;
       }
     },
   });
@@ -121,11 +131,11 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
   if (footerText) {
     const footerH = 20;
     const y = Math.min(finalY + 2, pageHeight - margin - footerH);
-    doc.setFillColor(244, 196, 48);
-    doc.setDrawColor(51, 51, 51);
+    doc.setFillColor(...COLORS.yellow);
+    doc.setDrawColor(...COLORS.border);
     doc.setLineWidth(0.8);
     doc.rect(margin, y, contentWidth, footerH, "FD");
-    doc.setTextColor(192, 57, 43);
+    doc.setTextColor(...COLORS.red);
     doc.setFont("helvetica", "bolditalic");
     doc.setFontSize(10);
     doc.text(footerText, pageWidth / 2, y + 13, { align: "center" });
