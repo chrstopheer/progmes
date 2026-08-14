@@ -31,7 +31,7 @@ function settingsWithCommunityDefault(settings) {
 const textInputProps = {
   autoComplete: "off",
   autoCorrect: "off",
-  autoCapitalize: "none",
+  autoCapitalize: "sentences",
   spellCheck: false,
 };
 
