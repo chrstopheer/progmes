@@ -148,8 +148,7 @@ export default function Schedule() {
               <span style={{ color: "var(--brand-blue)" }}>{y}</span>
             </h1>
             <p className="text-sm mt-1" style={{ color: "var(--ink-soft)" }}>
-              {count} atividade{count !== 1 ? "s" : ""} cadastrada{count !== 1 ? "s" : ""}. Prévia
-              em tamanho A4 retrato.
+              {count} atividade{count !== 1 ? "s" : ""} cadastrada{count !== 1 ? "s" : ""}.
             </p>
           </div>
         </div>
