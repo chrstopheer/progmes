@@ -164,16 +164,25 @@ export default function Schedule() {
               width: "100%",
               height: previewHeight ? `${previewHeight}px` : "auto",
               overflow: "hidden",
+              display: "flex",
+              justifyContent: "center",
             }}
           >
-            <SchedulePreview
-              ref={previewRef}
-              year={y}
-              month={m}
-              settings={settings}
-              monthData={monthData}
-              scale={previewScale}
-            />
+            <div
+              style={{
+                width: `${720 * previewScale}px`,
+                flex: "0 0 auto",
+              }}
+            >
+              <SchedulePreview
+                ref={previewRef}
+                year={y}
+                month={m}
+                settings={settings}
+                monthData={monthData}
+                scale={previewScale}
+              />
+            </div>
           </div>
         </div>
 
