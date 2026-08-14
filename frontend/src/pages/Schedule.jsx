@@ -141,7 +141,7 @@ export default function Schedule() {
               className="text-xs uppercase tracking-widest font-semibold"
               style={{ color: "var(--brand-red)" }}
             >
-              Programação Mensal
+              PROGRAMAÇÃO DO MÊS
             </div>
             <h1 className="font-display text-3xl sm:text-4xl mt-1" data-testid="schedule-heading">
               {MONTHS_PT[m]}{" "}
