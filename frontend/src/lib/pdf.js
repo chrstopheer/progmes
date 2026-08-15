@@ -2,9 +2,8 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { daysInMonth, weekdayAbbrOfDay, MONTHS_PT } from "./date-utils";
 
-// Build the PDF matching the printable A4 table: separate DATA/DIA columns,
-// 10pt table text, compact rows and fixed widths so the complete month fits
-// on one A4 portrait page without line wrapping.
+// Build the PDF matching the printable A4 table: separate DATA/DIA columns.
+// Long text wraps inside the fixed A4 columns instead of being truncated.
 export function buildMonthPdf({ year, month, settings, monthData }) {
   const doc = new jsPDF({
     unit: "pt",
@@ -17,7 +16,6 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
   const margin = 20;
   const contentWidth = pageWidth - margin * 2;
 
-  // Colors synchronized with the printable preview in index.css.
   const COLORS = {
     yellow: [244, 196, 48],
     blueRow: [220, 231, 246],
@@ -26,9 +24,16 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
     white: [255, 255, 255],
   };
 
-  // ==== HEADER BLOCK (yellow) ====
   let cursorY = margin;
-  const headerHeight = 58;
+  const headerPadding = 6;
+  const headerLineHeight = 14;
+  const headerText = [
+    `${settings.header.title} - ${MONTHS_PT[month]}`,
+    settings.header.community || "Comunidade Exemplo",
+    `${year} - ${(settings.header.quote || "").trim()}`,
+  ];
+  const headerHeight = headerPadding * 2 + headerLineHeight * headerText.length;
+
   doc.setFillColor(...COLORS.yellow);
   doc.setDrawColor(...COLORS.border);
   doc.setLineWidth(0.8);
@@ -37,13 +42,10 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...COLORS.ink);
   doc.setFontSize(13);
-  doc.text(`${settings.header.title} - ${MONTHS_PT[month]}`, pageWidth / 2, cursorY + 17, { align: "center" });
+  doc.text(headerText[0], pageWidth / 2, cursorY + headerPadding + 9, { align: "center", maxWidth: contentWidth - 12 });
   doc.setFontSize(10);
-  doc.text(settings.header.community || "Comunidade Exemplo", pageWidth / 2, cursorY + 32, { align: "center" });
-  doc.setTextColor(...COLORS.ink);
-  doc.setFontSize(10);
-  const quoteLine = `${year} - ${settings.header.quote || ""}`.trim();
-  doc.text(quoteLine, pageWidth / 2, cursorY + 48, { align: "center" });
+  doc.text(headerText[1], pageWidth / 2, cursorY + headerPadding + 9 + headerLineHeight, { align: "center", maxWidth: contentWidth - 12 });
+  doc.text(headerText[2], pageWidth / 2, cursorY + headerPadding + 9 + headerLineHeight * 2, { align: "center", maxWidth: contentWidth - 12 });
 
   cursorY += headerHeight;
 
@@ -94,10 +96,11 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
       cellPadding: 1.2,
       lineColor: COLORS.border,
       lineWidth: 0.4,
-      overflow: "ellipsize",
+      overflow: "linebreak",
       valign: "middle",
       halign: "center",
       minCellHeight: 14,
+      cellWidth: "wrap",
     },
     headStyles: {
       fillColor: COLORS.yellow,
@@ -110,6 +113,7 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
       minCellHeight: 16,
       lineColor: COLORS.border,
       lineWidth: 0.5,
+      overflow: "linebreak",
     },
     columnStyles: Object.fromEntries(
       scaledWidths.map((cellWidth, index) => [index, { cellWidth }]),
@@ -126,7 +130,8 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
   const finalY = doc.lastAutoTable?.finalY ?? cursorY;
   const footerText = settings.footer || "";
   if (footerText) {
-    const footerH = 20;
+    const footerLines = doc.splitTextToSize(footerText, contentWidth - 16);
+    const footerH = Math.max(20, footerLines.length * 12 + 8);
     const y = Math.min(finalY + 2, pageHeight - margin - footerH);
     doc.setFillColor(...COLORS.yellow);
     doc.setDrawColor(...COLORS.border);
@@ -135,7 +140,7 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
     doc.setTextColor(...COLORS.ink);
     doc.setFont("helvetica", "bolditalic");
     doc.setFontSize(10);
-    doc.text(footerText, pageWidth / 2, y + 13, { align: "center" });
+    doc.text(footerLines, pageWidth / 2, y + 13, { align: "center", maxWidth: contentWidth - 16 });
   }
 
   return doc;
@@ -148,7 +153,6 @@ export function downloadMonthPdf(args) {
   return fileName;
 }
 
-// Returns a File object for sharing via Web Share API
 export function buildMonthPdfFile(args) {
   const doc = buildMonthPdf(args);
   const blob = doc.output("blob");
