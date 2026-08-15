@@ -1,6 +1,7 @@
 {
+  "id": "./",
   "short_name": "Programação",
-  "name": "Programação",
+  "name": "Programação do mês",
   "description": "Crie e compartilhe.",
   "icons": [
     {
