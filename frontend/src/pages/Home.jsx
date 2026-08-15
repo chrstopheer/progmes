@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppHeader } from "../components/AppHeader";
 import { SettingsDialog } from "../components/SettingsDialog";
@@ -24,6 +24,7 @@ import {
   yearsRange,
 } from "../lib/date-utils";
 import { loadMonth, listSavedMonths } from "../lib/storage";
+import { toast } from "sonner";
 
 export default function Home() {
   const now = new Date();
@@ -42,11 +43,37 @@ export default function Home() {
   const [monthData, setMonthData] = useState({});
   const [savedMonths, setSavedMonths] = useState([]);
   const navigate = useNavigate();
+  const backPressedAt = useRef(0);
 
   useEffect(() => {
     setSearchParams({ year: String(year), month: String(month) }, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [year, month]);
+
+  // On the Home screen, require a second Android/browser back press to leave.
+  useEffect(() => {
+    const guardState = { progmesHomeBackGuard: true };
+    window.history.pushState(guardState, "", window.location.href);
+
+    const handlePopState = () => {
+      const nowMs = Date.now();
+      if (nowMs - backPressedAt.current < 2000) {
+        backPressedAt.current = 0;
+        // A web app cannot force-close a browser tab/window reliably. In
+        // standalone/PWA mode, going back from the guarded Home entry lets
+        // the platform perform its normal exit behavior.
+        window.history.back();
+        return;
+      }
+
+      backPressedAt.current = nowMs;
+      toast("Clique novamente para sair.");
+      window.history.pushState(guardState, "", window.location.href);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   const refreshData = () => {
     setMonthData(loadMonth(year, month));
