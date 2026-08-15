@@ -53,6 +53,10 @@ export default function Schedule() {
 
   const count = useMemo(() => Object.values(monthData).reduce((sum, entries) => sum + (Array.isArray(entries) ? entries.length : 1), 0), [monthData]);
 
+  const goHome = () => {
+    navigate(`/?year=${y}&month=${m}`, { replace: true });
+  };
+
   const handleDownload = () => {
     downloadMonthPdf({ year: y, month: m, settings, monthData });
   };
@@ -79,12 +83,12 @@ export default function Schedule() {
   const handleDeleteMonth = () => {
     deleteMonth(y, m);
     toast.success("Programação do mês excluída.");
-    navigate(`/?year=${y}&month=${m}`);
+    navigate(`/?year=${y}&month=${m}`, { replace: true });
   };
 
   return (
     <div className="min-h-screen bg-paper pb-24">
-      <AppHeader right={<Button variant="ghost" onClick={() => navigate(`/?year=${y}&month=${m}`)} data-testid="back-home-btn" className="text-sm"><ArrowLeft className="h-4 w-4 mr-1" /> Voltar</Button>} />
+      <AppHeader right={<Button variant="ghost" onClick={goHome} data-testid="back-home-btn" className="text-sm"><ArrowLeft className="h-4 w-4 mr-1" /> Voltar</Button>} />
       <main className="max-w-4xl mx-auto p-4 sm:p-6 space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3"><div><div className="text-xs uppercase tracking-widest font-semibold" style={{ color: "var(--brand-red)" }}>PROGRAMAÇÃO DO MÊS</div><h1 className="font-display text-3xl sm:text-4xl mt-1" data-testid="schedule-heading">{MONTHS_PT[m]} <span style={{ color: "var(--brand-blue)" }}>{y}</span></h1><p className="text-sm mt-1" style={{ color: "var(--ink-soft)" }}>{count} atividade{count !== 1 ? "s" : ""} cadastrada{count !== 1 ? "s" : ""}.</p></div></div>
         <div id="preview-container" className="rounded-2xl border shadow-sm bg-white p-3 sm:p-5 overflow-hidden" style={{ borderColor: "var(--hairline)" }}><div style={{ width: "100%", height: previewHeight ? `${previewHeight}px` : "auto", overflow: "hidden", display: "flex", justifyContent: "center" }}><div style={{ width: `${720 * previewScale}px`, flex: "0 0 auto" }}><SchedulePreview ref={previewRef} year={y} month={m} settings={settings} monthData={monthData} scale={previewScale} /></div></div></div>
