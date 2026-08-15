@@ -10,26 +10,6 @@ import { MONTHS_PT } from "../lib/date-utils";
 import { loadMonth, loadSettings, deleteMonth } from "../lib/storage";
 import { buildMonthPdfFile, downloadMonthPdf } from "../lib/pdf";
 
-const PDF_DOWNLOAD_NOTICE_KEY = "progmes:pdf-download-notice-v1";
-
-function loadPdfNoticeKeys() {
-  try {
-    const raw = localStorage.getItem(PDF_DOWNLOAD_NOTICE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return new Set(Array.isArray(parsed) ? parsed : []);
-  } catch {
-    return new Set();
-  }
-}
-
-function savePdfNoticeKeys(keys) {
-  try {
-    localStorage.setItem(PDF_DOWNLOAD_NOTICE_KEY, JSON.stringify([...keys]));
-  } catch {
-    // If storage is unavailable, the current download still works normally.
-  }
-}
-
 export default function Schedule() {
   const { year, month } = useParams();
   const y = parseInt(year, 10);
@@ -38,7 +18,7 @@ export default function Schedule() {
   const [settings, setSettings] = useState(loadSettings());
   const [monthData, setMonthData] = useState({});
   const previewRef = useRef(null);
-  const downloadedPdfKeys = useRef(loadPdfNoticeKeys());
+  const downloadedPdfKeys = useRef(new Set());
   const [previewScale, setPreviewScale] = useState(1);
   const [previewHeight, setPreviewHeight] = useState(0);
 
@@ -78,13 +58,12 @@ export default function Schedule() {
     const file = buildMonthPdfFile({ year: y, month: m, settings, monthData });
     downloadMonthPdf({ year: y, month: m, settings, monthData });
 
-    // The browser/Android owns the real download lifecycle. We remember which
-    // month has already received the app notice, so repeated downloads of the
-    // same PDF are handled only by Android. A different month gets its notice.
+    // The browser/Android owns the actual download lifecycle. During this
+    // page session, show the app notice only once per PDF/month. Repeated
+    // downloads are intentionally left to Android's own download UI.
     const pdfKey = `${y}-${m}`;
     if (!downloadedPdfKeys.current.has(pdfKey)) {
       downloadedPdfKeys.current.add(pdfKey);
-      savePdfNoticeKeys(downloadedPdfKeys.current);
       toast.success("PDF baixado", {
         description: "O arquivo foi enviado para os downloads.",
         action: {
