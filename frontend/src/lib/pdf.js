@@ -3,50 +3,46 @@ import autoTable from "jspdf-autotable";
 import { daysInMonth, weekdayAbbrOfDay, MONTHS_PT } from "./date-utils";
 
 // Build the PDF matching the printable A4 table: separate DATA/DIA columns.
-// Long text wraps inside the fixed A4 columns instead of being truncated.
+// Long text and manual line breaks are preserved in the header, table and footer.
 export function buildMonthPdf({ year, month, settings, monthData }) {
-  const doc = new jsPDF({
-    unit: "pt",
-    format: "a4",
-    orientation: "portrait",
-  });
-
+  const doc = new jsPDF({ unit: "pt", format: "a4", orientation: "portrait" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
   const contentWidth = pageWidth - margin * 2;
-
   const COLORS = {
-    yellow: [244, 196, 48],
-    blueRow: [220, 231, 246],
-    ink: [17, 17, 17],
-    border: [51, 51, 51],
-    white: [255, 255, 255],
+    yellow: [244, 196, 48], blueRow: [220, 231, 246], ink: [17, 17, 17], border: [51, 51, 51], white: [255, 255, 255],
   };
 
   let cursorY = margin;
   const headerPadding = 6;
-  const headerLineHeight = 14;
-  const headerText = [
-    `${settings.header.title} - ${MONTHS_PT[month]}`,
-    settings.header.community || "Comunidade Exemplo",
-    `${year} - ${(settings.header.quote || "").trim()}`,
+  const headerWidth = contentWidth - 12;
+  const headerEntries = [
+    { text: `${settings.header.title} - ${MONTHS_PT[month]}`, size: 13, gap: 3 },
+    { text: settings.header.community || "Comunidade Exemplo", size: 10, gap: 3 },
+    { text: `${year} - ${(settings.header.quote || "").trim()}`, size: 10, gap: 3 },
   ];
-  const headerHeight = headerPadding * 2 + headerLineHeight * headerText.length;
+  const headerLines = headerEntries.map((entry) => {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(entry.size);
+    return { ...entry, lines: doc.splitTextToSize(entry.text, headerWidth) };
+  });
+  const headerLineHeight = 12;
+  const headerHeight = headerPadding * 2 + headerLines.reduce((sum, entry) => sum + entry.lines.length * headerLineHeight + entry.gap, 0) - 3;
 
   doc.setFillColor(...COLORS.yellow);
   doc.setDrawColor(...COLORS.border);
   doc.setLineWidth(0.8);
   doc.rect(margin, cursorY, contentWidth, headerHeight, "FD");
 
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...COLORS.ink);
-  doc.setFontSize(13);
-  doc.text(headerText[0], pageWidth / 2, cursorY + headerPadding + 9, { align: "center", maxWidth: contentWidth - 12 });
-  doc.setFontSize(10);
-  doc.text(headerText[1], pageWidth / 2, cursorY + headerPadding + 9 + headerLineHeight, { align: "center", maxWidth: contentWidth - 12 });
-  doc.text(headerText[2], pageWidth / 2, cursorY + headerPadding + 9 + headerLineHeight * 2, { align: "center", maxWidth: contentWidth - 12 });
-
+  let textY = cursorY + headerPadding + 9;
+  headerLines.forEach((entry) => {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(entry.size);
+    doc.setTextColor(...COLORS.ink);
+    doc.text(entry.lines, pageWidth / 2, textY, { align: "center", maxWidth: headerWidth });
+    textY += entry.lines.length * headerLineHeight + entry.gap;
+  });
   cursorY += headerHeight;
 
   const dim = daysInMonth(year, month);
@@ -57,18 +53,8 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
     const wd = weekdayAbbrOfDay(year, month, d);
     if (Array.isArray(entries) && entries.length > 0) {
       entries.forEach((e, idx) => {
-        if (idx === 0) {
-          body.push([
-            { content: String(d), rowSpan: entries.length },
-            { content: wd, rowSpan: entries.length },
-            e.division || "",
-            e.activity || "",
-            e.place || "",
-            e.time || "",
-          ]);
-        } else {
-          body.push([e.division || "", e.activity || "", e.place || "", e.time || ""]);
-        }
+        if (idx === 0) body.push([{ content: String(d), rowSpan: entries.length }, { content: wd, rowSpan: entries.length }, e.division || "", e.activity || "", e.place || "", e.time || ""]);
+        else body.push([e.division || "", e.activity || "", e.place || "", e.time || ""]);
         filledFlags.push(true);
       });
     } else {
@@ -90,57 +76,46 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
     body,
     theme: "grid",
     styles: {
-      font: "helvetica",
-      fontSize: 10,
-      textColor: COLORS.ink,
-      cellPadding: 1.2,
-      lineColor: COLORS.border,
-      lineWidth: 0.4,
-      overflow: "linebreak",
-      valign: "middle",
-      halign: "center",
-      minCellHeight: 14,
-      cellWidth: "wrap",
+      font: "helvetica", fontSize: 10, textColor: COLORS.ink, cellPadding: 1.2, lineColor: COLORS.border,
+      lineWidth: 0.4, overflow: "linebreak", valign: "middle", halign: "center", minCellHeight: 14, cellWidth: "wrap",
     },
     headStyles: {
-      fillColor: COLORS.yellow,
-      textColor: COLORS.ink,
-      fontStyle: "bold",
-      fontSize: 10,
-      halign: "center",
-      valign: "middle",
-      cellPadding: 1.5,
-      minCellHeight: 16,
-      lineColor: COLORS.border,
-      lineWidth: 0.5,
-      overflow: "linebreak",
+      fillColor: COLORS.yellow, textColor: COLORS.ink, fontStyle: "bold", fontSize: 10, halign: "center", valign: "middle",
+      cellPadding: 1.5, minCellHeight: 16, lineColor: COLORS.border, lineWidth: 0.5, overflow: "linebreak",
     },
-    columnStyles: Object.fromEntries(
-      scaledWidths.map((cellWidth, index) => [index, { cellWidth }]),
-    ),
+    columnStyles: Object.fromEntries(scaledWidths.map((cellWidth, index) => [index, { cellWidth }])),
     didParseCell: (data) => {
-      if (data.section === "body") {
-        data.cell.styles.fillColor = filledFlags[data.row.index]
-          ? COLORS.blueRow
-          : COLORS.white;
-      }
+      if (data.section === "body") data.cell.styles.fillColor = filledFlags[data.row.index] ? COLORS.blueRow : COLORS.white;
     },
   });
 
   const finalY = doc.lastAutoTable?.finalY ?? cursorY;
   const footerText = settings.footer || "";
   if (footerText) {
-    const footerLines = doc.splitTextToSize(footerText, contentWidth - 16);
-    const footerH = Math.max(20, footerLines.length * 12 + 8);
-    const y = Math.min(finalY + 2, pageHeight - margin - footerH);
-    doc.setFillColor(...COLORS.yellow);
-    doc.setDrawColor(...COLORS.border);
-    doc.setLineWidth(0.8);
-    doc.rect(margin, y, contentWidth, footerH, "FD");
-    doc.setTextColor(...COLORS.ink);
     doc.setFont("helvetica", "bolditalic");
     doc.setFontSize(10);
-    doc.text(footerLines, pageWidth / 2, y + 13, { align: "center", maxWidth: contentWidth - 16 });
+    const footerLines = doc.splitTextToSize(footerText, contentWidth - 16);
+    const footerLineHeight = 12;
+    const footerH = Math.max(20, footerLines.length * footerLineHeight + 8);
+    const y = finalY + 2;
+    if (y + footerH <= pageHeight - margin) {
+      doc.setFillColor(...COLORS.yellow);
+      doc.setDrawColor(...COLORS.border);
+      doc.setLineWidth(0.8);
+      doc.rect(margin, y, contentWidth, footerH, "FD");
+      doc.setTextColor(...COLORS.ink);
+      doc.text(footerLines, pageWidth / 2, y + 13, { align: "center", maxWidth: contentWidth - 16 });
+    } else {
+      doc.addPage();
+      const pageY = margin;
+      doc.setFillColor(...COLORS.yellow);
+      doc.setDrawColor(...COLORS.border);
+      doc.rect(margin, pageY, contentWidth, footerH, "FD");
+      doc.setTextColor(...COLORS.ink);
+      doc.setFont("helvetica", "bolditalic");
+      doc.setFontSize(10);
+      doc.text(footerLines, pageWidth / 2, pageY + 13, { align: "center", maxWidth: contentWidth - 16 });
+    }
   }
 
   return doc;
