@@ -17,6 +17,8 @@ export default function Schedule() {
   const navigate = useNavigate();
   const [settings, setSettings] = useState(loadSettings());
   const [monthData, setMonthData] = useState({});
+  const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
+  const [downloadedPdf, setDownloadedPdf] = useState(null);
   const previewRef = useRef(null);
   const [previewScale, setPreviewScale] = useState(1);
   const [previewHeight, setPreviewHeight] = useState(0);
@@ -54,8 +56,24 @@ export default function Schedule() {
   const count = useMemo(() => Object.values(monthData).reduce((sum, entries) => sum + (Array.isArray(entries) ? entries.length : 1), 0), [monthData]);
 
   const handleDownload = () => {
+    const file = buildMonthPdfFile({ year: y, month: m, settings, monthData });
+    const fileName = file.name;
+
+    // Trigger the browser/Android download first. We intentionally wait a moment
+    // before showing our prompt so it does not appear before the download starts.
     downloadMonthPdf({ year: y, month: m, settings, monthData });
-    toast.success("PDF baixado.");
+    setDownloadedPdf(file);
+    setTimeout(() => setDownloadDialogOpen(true), 800);
+
+    return fileName;
+  };
+
+  const handleOpenDownloadedPdf = () => {
+    if (!downloadedPdf) return;
+    const url = URL.createObjectURL(downloadedPdf);
+    window.open(url, "_blank", "noopener,noreferrer");
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    setDownloadDialogOpen(false);
   };
 
   const handleShareWhatsApp = async () => {
@@ -95,6 +113,19 @@ export default function Schedule() {
           <AlertDialog><AlertDialogTrigger asChild><Button variant="outline" data-testid="delete-month-btn" className="w-full h-12 text-base" style={{ borderColor: "var(--brand-red)", color: "var(--brand-red)" }} disabled={count === 0}><Trash2 className="h-4 w-4 mr-2" /> Excluir mês</Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Excluir programação inteira?</AlertDialogTitle><AlertDialogDescription>Todas as atividades de {MONTHS_PT[m]} de {y} serão removidas.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel data-testid="del-month-cancel">Cancelar</AlertDialogCancel><AlertDialogAction data-testid="del-month-confirm" onClick={handleDeleteMonth} style={{ background: "var(--brand-red)", color: "white" }}>Sim, excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
         </div>
       </main>
+
+      <AlertDialog open={downloadDialogOpen} onOpenChange={setDownloadDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>PDF baixado</AlertDialogTitle>
+            <AlertDialogDescription>O PDF foi baixado. Deseja abrir o PDF agora?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Não</AlertDialogCancel>
+            <AlertDialogAction onClick={handleOpenDownloadedPdf}>Sim, abrir PDF</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
