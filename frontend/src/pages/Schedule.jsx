@@ -18,6 +18,7 @@ export default function Schedule() {
   const [settings, setSettings] = useState(loadSettings());
   const [monthData, setMonthData] = useState({});
   const previewRef = useRef(null);
+  const downloadedPdfKeys = useRef(new Set());
   const [previewScale, setPreviewScale] = useState(1);
   const [previewHeight, setPreviewHeight] = useState(0);
 
@@ -57,20 +58,24 @@ export default function Schedule() {
     const file = buildMonthPdfFile({ year: y, month: m, settings, monthData });
     downloadMonthPdf({ year: y, month: m, settings, monthData });
 
-    // Keep the feedback lightweight. The browser/Android owns the actual
-    // download lifecycle, so the app does not pretend to know when it finished.
-    toast.success("PDF baixado", {
-      description: "O arquivo foi enviado para os downloads.",
-      action: {
-        label: "Abrir PDF",
-        onClick: () => {
-          const url = URL.createObjectURL(file);
-          window.open(url, "_blank", "noopener,noreferrer");
-          setTimeout(() => URL.revokeObjectURL(url), 60000);
+    // The browser/Android owns the real download lifecycle. Show our helpful
+    // feedback only the first time this PDF is requested during this session.
+    const pdfKey = `${y}-${m}`;
+    if (!downloadedPdfKeys.current.has(pdfKey)) {
+      downloadedPdfKeys.current.add(pdfKey);
+      toast.success("PDF baixado", {
+        description: "O arquivo foi enviado para os downloads.",
+        action: {
+          label: "Abrir PDF",
+          onClick: () => {
+            const url = URL.createObjectURL(file);
+            window.open(url, "_blank", "noopener,noreferrer");
+            setTimeout(() => URL.revokeObjectURL(url), 60000);
+          },
         },
-      },
-      duration: 6000,
-    });
+        duration: 6000,
+      });
+    }
   };
 
   const handleShareWhatsApp = async () => {
