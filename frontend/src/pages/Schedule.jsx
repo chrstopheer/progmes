@@ -10,26 +10,6 @@ import { MONTHS_PT } from "../lib/date-utils";
 import { loadMonth, loadSettings, deleteMonth } from "../lib/storage";
 import { buildMonthPdfFile, downloadMonthPdf } from "../lib/pdf";
 
-const PDF_DOWNLOAD_NOTICE_KEY = "progmes:pdf-download-notice-v2";
-
-function loadPdfNoticeKeys() {
-  try {
-    const raw = localStorage.getItem(PDF_DOWNLOAD_NOTICE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return new Set(Array.isArray(parsed) ? parsed : []);
-  } catch {
-    return new Set();
-  }
-}
-
-function savePdfNoticeKeys(keys) {
-  try {
-    localStorage.setItem(PDF_DOWNLOAD_NOTICE_KEY, JSON.stringify([...keys]));
-  } catch {
-    // Download still works if persistent browser storage is unavailable.
-  }
-}
-
 export default function Schedule() {
   const { year, month } = useParams();
   const y = parseInt(year, 10);
@@ -38,7 +18,6 @@ export default function Schedule() {
   const [settings, setSettings] = useState(loadSettings());
   const [monthData, setMonthData] = useState({});
   const previewRef = useRef(null);
-  const downloadedPdfKeys = useRef(loadPdfNoticeKeys());
   const [previewScale, setPreviewScale] = useState(1);
   const [previewHeight, setPreviewHeight] = useState(0);
 
@@ -75,29 +54,7 @@ export default function Schedule() {
   const count = useMemo(() => Object.values(monthData).reduce((sum, entries) => sum + (Array.isArray(entries) ? entries.length : 1), 0), [monthData]);
 
   const handleDownload = () => {
-    const file = buildMonthPdfFile({ year: y, month: m, settings, monthData });
     downloadMonthPdf({ year: y, month: m, settings, monthData });
-
-    // The browser/Android owns the actual download lifecycle. We persist only
-    // whether this month has already received the app's helpful first-download
-    // notice. Repeated downloads are intentionally left to Android's UI.
-    const pdfKey = `${y}-${m}`;
-    if (!downloadedPdfKeys.current.has(pdfKey)) {
-      downloadedPdfKeys.current.add(pdfKey);
-      savePdfNoticeKeys(downloadedPdfKeys.current);
-      toast.success("PDF baixado", {
-        description: "O arquivo foi enviado para os downloads.",
-        action: {
-          label: "Abrir PDF",
-          onClick: () => {
-            const url = URL.createObjectURL(file);
-            window.open(url, "_blank", "noopener,noreferrer");
-            setTimeout(() => URL.revokeObjectURL(url), 60000);
-          },
-        },
-        duration: 6000,
-      });
-    }
   };
 
   const handleShareWhatsApp = async () => {
