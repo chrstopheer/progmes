@@ -54,14 +54,15 @@ export default function Schedule() {
   const count = useMemo(() => Object.values(monthData).reduce((sum, entries) => sum + (Array.isArray(entries) ? entries.length : 1), 0), [monthData]);
 
   const handleDownload = async () => {
-    const file = buildMonthPdfFile({ year: y, month: m, settings, monthData });
-    const shouldOpen = window.confirm("PDF gerado. Deseja abrir o PDF agora?");
+    // Download first. Only after the browser has received the download request
+    // do we ask whether the user also wants to open the generated PDF.
+    downloadMonthPdf({ year: y, month: m, settings, monthData });
+    const shouldOpen = window.confirm("PDF baixado. Deseja abrir o PDF agora?");
     if (shouldOpen) {
+      const file = buildMonthPdfFile({ year: y, month: m, settings, monthData });
       const url = URL.createObjectURL(file);
       window.open(url, "_blank", "noopener,noreferrer");
       setTimeout(() => URL.revokeObjectURL(url), 60000);
-    } else {
-      downloadMonthPdf({ year: y, month: m, settings, monthData });
     }
   };
 
