@@ -22,12 +22,13 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
     { text: settings.header.community || "Comunidade Exemplo", size: 10, gap: 3 },
     { text: `${year} - ${(settings.header.quote || "").trim()}`, size: 10, gap: 3 },
   ];
-  const headerLines = headerEntries.map((entry) => {
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(entry.size);
-    return { ...entry, lines: doc.splitTextToSize(entry.text, headerWidth) };
-  });
   const headerLineHeight = 12;
+  const wrapPreservingBreaks = (text, width, size) => {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(size);
+    return String(text || "").split(/\r?\n/).flatMap((line) => doc.splitTextToSize(line || " ", width));
+  };
+  const headerLines = headerEntries.map((entry) => ({ ...entry, lines: wrapPreservingBreaks(entry.text, headerWidth, entry.size) }));
   const headerHeight = headerPadding * 2 + headerLines.reduce((sum, entry) => sum + entry.lines.length * headerLineHeight + entry.gap, 0) - 3;
 
   doc.setFillColor(...COLORS.yellow);
@@ -94,28 +95,22 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
   if (footerText) {
     doc.setFont("helvetica", "bolditalic");
     doc.setFontSize(10);
-    const footerLines = doc.splitTextToSize(footerText, contentWidth - 16);
+    const footerLines = String(footerText).split(/\r?\n/).flatMap((line) => doc.splitTextToSize(line || " ", contentWidth - 16));
     const footerLineHeight = 12;
     const footerH = Math.max(20, footerLines.length * footerLineHeight + 8);
-    const y = finalY + 2;
-    if (y + footerH <= pageHeight - margin) {
-      doc.setFillColor(...COLORS.yellow);
-      doc.setDrawColor(...COLORS.border);
-      doc.setLineWidth(0.8);
-      doc.rect(margin, y, contentWidth, footerH, "FD");
-      doc.setTextColor(...COLORS.ink);
-      doc.text(footerLines, pageWidth / 2, y + 13, { align: "center", maxWidth: contentWidth - 16 });
-    } else {
+    let y = finalY + 2;
+    if (y + footerH > pageHeight - margin) {
       doc.addPage();
-      const pageY = margin;
-      doc.setFillColor(...COLORS.yellow);
-      doc.setDrawColor(...COLORS.border);
-      doc.rect(margin, pageY, contentWidth, footerH, "FD");
-      doc.setTextColor(...COLORS.ink);
-      doc.setFont("helvetica", "bolditalic");
-      doc.setFontSize(10);
-      doc.text(footerLines, pageWidth / 2, pageY + 13, { align: "center", maxWidth: contentWidth - 16 });
+      y = margin;
     }
+    doc.setFillColor(...COLORS.yellow);
+    doc.setDrawColor(...COLORS.border);
+    doc.setLineWidth(0.8);
+    doc.rect(margin, y, contentWidth, footerH, "FD");
+    doc.setTextColor(...COLORS.ink);
+    doc.setFont("helvetica", "bolditalic");
+    doc.setFontSize(10);
+    doc.text(footerLines, pageWidth / 2, y + 13, { align: "center", maxWidth: contentWidth - 16 });
   }
 
   return doc;
