@@ -54,7 +54,7 @@ export default function Schedule() {
   const count = useMemo(() => Object.values(monthData).reduce((sum, entries) => sum + (Array.isArray(entries) ? entries.length : 1), 0), [monthData]);
 
   const goHome = () => {
-    navigate(`/?year=${y}&month=${m}`, { replace: true });
+    window.history.back();
   };
 
   const handleDownload = () => {
