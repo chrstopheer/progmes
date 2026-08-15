@@ -106,7 +106,8 @@ body {
     box-shadow: 0 4px 14px -6px rgba(30, 36, 50, 0.25);
 }
 
-/* Preview table styles. Keep the complete monthly table compact and stable. */
+/* Preview table: preserve A4 width while allowing long text to wrap and
+   increase the row/header height instead of clipping content. */
 .preview-table {
     width: 100%;
     table-layout: fixed;
@@ -123,9 +124,11 @@ body {
     text-align: center;
     vertical-align: middle;
     line-height: 1.05;
-    white-space: nowrap;
-    overflow: hidden;
+    white-space: normal;
+    overflow: visible;
     text-overflow: clip;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 .preview-table thead th {
     background: var(--brand-yellow);
@@ -135,7 +138,9 @@ body {
     text-align: center;
     text-transform: uppercase;
     letter-spacing: 0.02em;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 .preview-table tr.filled td {
     background: var(--brand-blue-row);
@@ -155,20 +160,24 @@ body {
     font-weight: 700;
     font-style: italic;
     font-size: 11px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
-.preview-header .h-title {
-    color: #111;
-    font-weight: 700;
-    font-size: 14px;
-}
-.preview-header .h-sub {
-    color: #111;
-    font-weight: 700;
-    font-size: 12px;
-}
+.preview-header .h-title,
+.preview-header .h-sub,
 .preview-header .h-quote {
     color: #111;
     font-weight: 700;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+.preview-header .h-title {
+    font-size: 14px;
+}
+.preview-header .h-sub,
+.preview-header .h-quote {
     font-size: 12px;
 }
 
