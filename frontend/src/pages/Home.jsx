@@ -59,15 +59,11 @@ export default function Home() {
       const nowMs = Date.now();
       if (nowMs - backPressedAt.current < 2000) {
         backPressedAt.current = 0;
-        // A web app cannot force-close a browser tab/window reliably. In
-        // standalone/PWA mode, going back from the guarded Home entry lets
-        // the platform perform its normal exit behavior.
         window.history.back();
         return;
       }
 
       backPressedAt.current = nowMs;
-      toast("Clique novamente para sair.");
       window.history.pushState(guardState, "", window.location.href);
     };
 
