@@ -13,7 +13,6 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
   let cursorY = margin;
   const headerPadding = 6;
   const headerWidth = contentWidth - 12;
-  // Always derive the title from the calendar month/year, never from user-entered settings.
   const title = `Programação do Mês de ${MONTHS_PT[month]} de ${year}`;
   const headerEntries = [
     { text: title, size: 13, gap: 3 },
@@ -47,7 +46,8 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
       entries.forEach((e, idx) => { if (idx === 0) body.push([{ content: String(d), rowSpan: entries.length }, { content: wd, rowSpan: entries.length }, e.division || "", e.activity || "", e.place || "", e.time || ""]); else body.push([e.division || "", e.activity || "", e.place || "", e.time || ""]); filledFlags.push(true); });
     } else { body.push([String(d), wd, "", "", "", ""]); filledFlags.push(false); }
   }
-  const columnWidths = [32, 42, 62, 255, 105, 56];
+  // Give DATA a little more room so its centered heading is visually balanced; take the same width from DIVISÃO.
+  const columnWidths = [36, 42, 58, 255, 105, 56];
   const widthScale = contentWidth / columnWidths.reduce((sum, width) => sum + width, 0);
   const scaledWidths = columnWidths.map((width) => width * widthScale);
 
