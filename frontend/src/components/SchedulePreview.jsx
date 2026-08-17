@@ -1,8 +1,11 @@
 import React from "react";
 import { daysInMonth, weekdayAbbrOfDay, MONTHS_PT } from "../lib/date-utils";
 
-const COL_DATA = 42;
-const COL_DIVISAO = 68;
+const COL_DATA = 58;
+const COL_DIA = 42;
+const COL_DIVISAO = 58;
+const COL_LOCAL = 105;
+const COL_HORARIO = 56;
 
 export const SchedulePreview = React.forwardRef(function SchedulePreview(
   { year, month, settings, monthData, scale = 1 },
@@ -30,14 +33,14 @@ export const SchedulePreview = React.forwardRef(function SchedulePreview(
       <table className="preview-table">
         <colgroup>
           <col style={{ width: COL_DATA }} />
-          <col style={{ width: 48 }} />
+          <col style={{ width: COL_DIA }} />
           <col style={{ width: COL_DIVISAO }} />
           <col />
-          <col style={{ width: 130 }} />
-          <col style={{ width: 72 }} />
+          <col style={{ width: COL_LOCAL }} />
+          <col style={{ width: COL_HORARIO }} />
         </colgroup>
-        <thead><tr><th style={{ width: COL_DATA, textAlign: "center" }}>DATA</th><th style={{ width: 48 }}>DIA</th><th style={{ width: COL_DIVISAO }}>DIVISÃO</th><th>ATIVIDADE</th><th style={{ width: 130 }}>LOCAL</th><th style={{ width: 72 }}>HORÁRIO</th></tr></thead>
-        <tbody>{rows.map((r, i) => <tr key={i} className={r.isFilled ? "filled" : ""}>{r.isFirst && <td rowSpan={r.rowSpan} style={{ width: COL_DATA, fontWeight: 600 }}>{r.day}</td>}{r.isFirst && <td rowSpan={r.rowSpan} style={{ width: 48 }}>{r.wd}</td>}<td style={{ width: COL_DIVISAO }}>{r.division}</td><td>{r.activity}</td><td>{r.place}</td><td>{r.time}</td></tr>)}</tbody>
+        <thead><tr><th style={{ width: COL_DATA, textAlign: "center" }}>DATA</th><th style={{ width: COL_DIA }}>DIA</th><th style={{ width: COL_DIVISAO }}>DIVISÃO</th><th>ATIVIDADE</th><th style={{ width: COL_LOCAL }}>LOCAL</th><th style={{ width: COL_HORARIO }}>HORÁRIO</th></tr></thead>
+        <tbody>{rows.map((r, i) => <tr key={i} className={r.isFilled ? "filled" : ""}>{r.isFirst && <td rowSpan={r.rowSpan} style={{ width: COL_DATA, fontWeight: 600 }}>{r.day}</td>}{r.isFirst && <td rowSpan={r.rowSpan} style={{ width: COL_DIA }}>{r.wd}</td>}<td style={{ width: COL_DIVISAO }}>{r.division}</td><td>{r.activity}</td><td style={{ width: COL_LOCAL }}>{r.place}</td><td style={{ width: COL_HORARIO }}>{r.time}</td></tr>)}</tbody>
       </table>
       <div className="preview-footer" style={{ fontWeight: 400, fontStyle: "normal" }}>{settings.footer}</div>
     </div>
