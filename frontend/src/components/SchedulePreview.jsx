@@ -5,7 +5,7 @@ const COL_DATA = 38;
 const COL_DIA = 42;
 const COL_DIVISAO = 54;
 const COL_LOCAL = 105;
-const COL_HORARIO = 56;
+const COL_HORARIO = 60;
 
 export const SchedulePreview = React.forwardRef(function SchedulePreview(
   { year, month, settings, monthData, scale = 1 },
