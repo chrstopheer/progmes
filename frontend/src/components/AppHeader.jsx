@@ -1,27 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { CalendarDays } from "lucide-react";
-import { loadSettings } from "../lib/storage";
 
-export function AppHeader({ right, subtitle }) {
-  const [community, setCommunity] = useState(
-    () => subtitle ?? loadSettings().header.community,
-  );
-
-  useEffect(() => {
-    if (subtitle !== undefined) setCommunity(subtitle);
-  }, [subtitle]);
-
-  // Listen for cross-tab / dialog updates
-  useEffect(() => {
-    const handler = () => setCommunity(loadSettings().header.community);
-    window.addEventListener("prog-ong:settings-updated", handler);
-    window.addEventListener("storage", handler);
-    return () => {
-      window.removeEventListener("prog-ong:settings-updated", handler);
-      window.removeEventListener("storage", handler);
-    };
-  }, []);
-
+export function AppHeader({ right }) {
   return (
     <header
       data-testid="app-header"
@@ -46,13 +26,6 @@ export function AppHeader({ right, subtitle }) {
               style={{ color: "var(--ink)" }}
             >
               Programação
-            </div>
-            <div
-              className="text-xs"
-              style={{ color: "var(--ink-soft)" }}
-              data-testid="app-header-community"
-            >
-              {community}
             </div>
           </div>
         </div>
