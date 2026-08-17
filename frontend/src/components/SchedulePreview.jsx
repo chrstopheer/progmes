@@ -15,7 +15,6 @@ export const SchedulePreview = React.forwardRef(function SchedulePreview(
     } else rows.push({ day: d, wd, isFirst: true, rowSpan: 1, division: "", activity: "", place: "", time: "", isFilled: false });
   }
 
-  // The title always reflects the month/year currently selected in the calendar.
   const title = `Programação do Mês de ${MONTHS_PT[month]} de ${year}`;
 
   return (
@@ -26,8 +25,8 @@ export const SchedulePreview = React.forwardRef(function SchedulePreview(
         <div className="h-quote">{settings.header.quote}</div>
       </div>
       <table className="preview-table">
-        <thead><tr><th style={{ width: 38 }}>DATA</th><th style={{ width: 48 }}>DIA</th><th style={{ width: 72 }}>DIVISÃO</th><th>ATIVIDADE</th><th style={{ width: 130 }}>LOCAL</th><th style={{ width: 72 }}>HORÁRIO</th></tr></thead>
-        <tbody>{rows.map((r, i) => <tr key={i} className={r.isFilled ? "filled" : ""}>{r.isFirst && <td rowSpan={r.rowSpan} style={{ width: 38, fontWeight: 600 }}>{r.day}</td>}{r.isFirst && <td rowSpan={r.rowSpan} style={{ width: 48 }}>{r.wd}</td>}<td>{r.division}</td><td>{r.activity}</td><td>{r.place}</td><td>{r.time}</td></tr>)}</tbody>
+        <thead><tr><th style={{ width: 42, textAlign: "center" }}>DATA</th><th style={{ width: 48 }}>DIA</th><th style={{ width: 68 }}>DIVISÃO</th><th>ATIVIDADE</th><th style={{ width: 130 }}>LOCAL</th><th style={{ width: 72 }}>HORÁRIO</th></tr></thead>
+        <tbody>{rows.map((r, i) => <tr key={i} className={r.isFilled ? "filled" : ""}>{r.isFirst && <td rowSpan={r.rowSpan} style={{ width: 42, fontWeight: 600 }}>{r.day}</td>}{r.isFirst && <td rowSpan={r.rowSpan} style={{ width: 48 }}>{r.wd}</td>}<td>{r.division}</td><td>{r.activity}</td><td>{r.place}</td><td>{r.time}</td></tr>)}</tbody>
       </table>
       <div className="preview-footer">{settings.footer}</div>
     </div>
