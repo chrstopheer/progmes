@@ -15,8 +15,7 @@ const textInputProps = { autoComplete: "off", autoCorrect: "off", autoCapitalize
 
 export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear, selectedMonth }) {
   const [settings, setSettings] = useState(() => settingsWithCommunityDefault(loadSettings()));
-  const historyEntryAdded = useRef(false); const handlingPopState = useRef(false);
-  const communityRef = useRef(null);
+  const historyEntryAdded = useRef(false); const handlingPopState = useRef(false); const communityRef = useRef(null);
   const generatedTitle = `Programação do Mês de ${MONTHS_PT[selectedMonth ?? 0]} de ${selectedYear}`;
   useEffect(() => { if (!open) return; window.history.pushState({ ...(window.history.state || {}), settingsDialog: SETTINGS_HISTORY_STATE }, "", window.location.href); historyEntryAdded.current = true; const handlePopState = () => { handlingPopState.current = true; historyEntryAdded.current = false; onOpenChange(false); }; window.addEventListener("popstate", handlePopState); return () => window.removeEventListener("popstate", handlePopState); }, [open, onOpenChange]);
   useEffect(() => { if (open) setSettings(settingsWithCommunityDefault(loadSettings())); }, [open]);
@@ -37,7 +36,7 @@ export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear, sele
             <div className="space-y-2"><Label htmlFor="h-title">Título</Label><Input id="h-title" data-testid="setting-header-title" value={generatedTitle} readOnly disabled {...textInputProps} /></div>
             <div className="space-y-2">
               <Label htmlFor="h-community">Comunidade</Label>
-              <Input ref={communityRef} id="h-community" data-testid="setting-header-community" value={settings.header.community} onChange={(e) => updateHeader("community", e.target.value)} onFocus={moveCommunityCursorToEnd} onClick={moveCommunityCursorToEnd} onContextMenu={(e) => e.preventDefault()} onCopy={(e) => e.preventDefault()} onCut={(e) => e.preventDefault()} {...textInputProps} />
+              <Input ref={communityRef} id="h-community" data-testid="setting-header-community" value={settings.header.community} onChange={(e) => updateHeader("community", e.target.value)} onFocus={moveCommunityCursorToEnd} onClick={moveCommunityCursorToEnd} {...textInputProps} />
             </div>
             <div className="space-y-2"><Label htmlFor="h-quote">Lema</Label><Textarea id="h-quote" data-testid="setting-header-quote" rows={2} value={settings.header.quote} onChange={(e) => updateHeader("quote", e.target.value)} {...textInputProps} className="not-italic" /></div>
           </section>
