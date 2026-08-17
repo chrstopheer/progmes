@@ -25,14 +25,15 @@ export default function Home() {
     setSearchParams({ year: String(year), month: String(month) }, { replace: true });
   }, [year, month, setSearchParams]);
 
+  useEffect(() => {
+    setMonthData(loadMonth(year, month));
+    setSavedMonths(listSavedMonths());
+  }, [year, month]);
+
   const refreshData = () => {
     setMonthData(loadMonth(year, month));
     setSavedMonths(listSavedMonths());
   };
-
-  useEffect(() => {
-    refreshData();
-  }, [year, month]);
 
   const dim = daysInMonth(year, month);
   const firstWD = firstWeekday(year, month);
