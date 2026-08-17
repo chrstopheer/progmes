@@ -73,7 +73,7 @@ body {
 }
 .preview-footer {
     border-top: none; border-bottom: 1px solid #333; color: #111; font-weight: 700;
-    font-style: italic; font-size: 11px; white-space: pre-wrap;
+    font-size: 11px; white-space: pre-wrap;
 }
 .preview-header .h-title, .preview-header .h-sub, .preview-header .h-quote {
     color: #111; font-weight: 700; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word;
