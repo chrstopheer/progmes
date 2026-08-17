@@ -3,7 +3,7 @@ import { daysInMonth, weekdayAbbrOfDay, MONTHS_PT } from "../lib/date-utils";
 
 const COL_DATA = 38;
 const COL_DIA = 42;
-const COL_DIVISAO = 56;
+const COL_DIVISAO = 54;
 const COL_LOCAL = 105;
 const COL_HORARIO = 56;
 
