@@ -90,6 +90,7 @@ export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear, sele
       ...settings,
       header: {
         ...settings.header,
+        // The title is generated from the calendar selection and is never user-editable.
         title: generatedTitle,
       },
     };
@@ -137,14 +138,13 @@ export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear, sele
               <Input id="h-community" data-testid="setting-header-community" value={settings.header.community} onChange={(e) => updateHeader("community", e.target.value)} {...textInputProps} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="h-quote">Lema {selectedYear}</Label>
+              <Label htmlFor="h-quote">Lema</Label>
               <Textarea
                 id="h-quote"
                 data-testid="setting-header-quote"
                 rows={2}
                 value={settings.header.quote}
-                readOnly
-                disabled
+                onChange={(e) => updateHeader("quote", e.target.value)}
                 {...textInputProps}
               />
             </div>
