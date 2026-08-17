@@ -36,7 +36,7 @@ export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear, sele
             <div className="space-y-2"><Label htmlFor="h-title">Título</Label><Input id="h-title" data-testid="setting-header-title" value={generatedTitle} readOnly disabled {...textInputProps} /></div>
             <div className="space-y-2">
               <Label htmlFor="h-community">Comunidade</Label>
-              <Input ref={communityRef} id="h-community" data-testid="setting-header-community" value={settings.header.community} onChange={(e) => updateHeader("community", e.target.value)} onFocus={moveCommunityCursorToEnd} onClick={moveCommunityCursorToEnd} {...textInputProps} />
+              <Input ref={communityRef} id="h-community" data-testid="setting-header-community" value={settings.header.community} onChange={(e) => updateHeader("community", e.target.value)} onFocus={moveCommunityCursorToEnd} {...textInputProps} />
             </div>
             <div className="space-y-2"><Label htmlFor="h-quote">Lema</Label><Textarea id="h-quote" data-testid="setting-header-quote" rows={2} value={settings.header.quote} onChange={(e) => updateHeader("quote", e.target.value)} {...textInputProps} className="not-italic" /></div>
           </section>
