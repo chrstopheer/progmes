@@ -15,6 +15,7 @@ export const SchedulePreview = React.forwardRef(function SchedulePreview(
     } else rows.push({ day: d, wd, isFirst: true, rowSpan: 1, division: "", activity: "", place: "", time: "", isFilled: false });
   }
 
+  // The title always reflects the month/year currently selected in the calendar.
   const title = `Programação do Mês de ${MONTHS_PT[month]} de ${year}`;
 
   return (
