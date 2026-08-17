@@ -2,12 +2,14 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { daysInMonth, weekdayAbbrOfDay, MONTHS_PT } from "./date-utils";
 
+const COMMUNITY_DEFAULT = "Comunidade Exemplo";
+
 export function buildMonthPdf({ year, month, settings, monthData }) {
   const doc = new jsPDF({ unit: "pt", format: "a4", orientation: "portrait" });
   const pageWidth = doc.internal.pageSize.getWidth(); const pageHeight = doc.internal.pageSize.getHeight(); const margin = 20; const contentWidth = pageWidth - margin * 2;
   const COLORS = { yellow: [244, 196, 48], blueRow: [220, 231, 246], ink: [17, 17, 17], border: [51, 51, 51], white: [255, 255, 255] };
   let cursorY = margin; const headerPadding = 6; const headerWidth = contentWidth - 12; const title = `Programação do Mês de ${MONTHS_PT[month]} de ${year}`;
-  const headerEntries = [{ text: title, size: 13, gap: 3 }, { text: settings?.header?.community || "", size: 10, gap: 3 }, { text: (settings?.header?.quote || "").trim(), size: 10, gap: 3 }].filter((entry) => entry.text !== "");
+  const headerEntries = [{ text: title, size: 13, gap: 3 }, { text: settings?.header?.community || COMMUNITY_DEFAULT, size: 10, gap: 3 }, { text: (settings?.header?.quote || "").trim(), size: 10, gap: 3 }].filter((entry) => entry.text !== "");
   const headerLineHeight = 12;
   const wrapPreservingBreaks = (text, width, size) => { doc.setFont("helvetica", "bold"); doc.setFontSize(size); return String(text || "").split(/\r?\n/).flatMap((line) => doc.splitTextToSize(line || " ", width)); };
   const headerLines = headerEntries.map((entry) => ({ ...entry, lines: wrapPreservingBreaks(entry.text, headerWidth, entry.size) }));
