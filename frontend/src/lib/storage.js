@@ -6,7 +6,7 @@
 const SETTINGS_KEY = "prog_ong_settings_v1";
 const ACTIVITIES_KEY = "prog_ong_activities_v1";
 
-export const DEFAULT_DIVISIONS = ["DE", "DFJ", "DMJ", "DF", "DS", "5 Div."];
+export const DEFAULT_DIVISIONS = ["DE", "DFJ", "DMJ", "DF", "DS", "DJ", "5 Div."];
 
 export const DEFAULT_SETTINGS = {
   header: {
@@ -29,13 +29,24 @@ export function loadSettings() {
     const community = storedHeader.community === "Comunidade"
       ? ""
       : storedHeader.community ?? "";
+
+    let divisions = Array.isArray(parsed.divisions) && parsed.divisions.length
+      ? [...parsed.divisions]
+      : [...DEFAULT_DIVISIONS];
+
+    // Migration: add DJ immediately before 5 Div. for existing users.
+    // Preserve all existing divisions and their order.
+    if (!divisions.includes("DJ")) {
+      const fiveDivIndex = divisions.indexOf("5 Div.");
+      if (fiveDivIndex >= 0) divisions.splice(fiveDivIndex, 0, "DJ");
+      else divisions.push("DJ");
+    }
+
     return {
       ...DEFAULT_SETTINGS,
       ...parsed,
       header: { ...DEFAULT_SETTINGS.header, ...storedHeader, community },
-      divisions: Array.isArray(parsed.divisions) && parsed.divisions.length
-        ? parsed.divisions
-        : DEFAULT_DIVISIONS,
+      divisions,
     };
   } catch {
     return { ...DEFAULT_SETTINGS };
