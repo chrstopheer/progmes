@@ -13,6 +13,7 @@ export function buildMonthPdf({ year, month, settings, monthData }) {
   let cursorY = margin;
   const headerPadding = 6;
   const headerWidth = contentWidth - 12;
+  // Always derive the title from the calendar month/year, never from user-entered settings.
   const title = `Programação do Mês de ${MONTHS_PT[month]} de ${year}`;
   const headerEntries = [
     { text: title, size: 13, gap: 3 },
