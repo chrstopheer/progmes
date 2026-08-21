@@ -14,15 +14,24 @@ function settingsWithCommunityDefault(settings) { if (settings?.header?.communit
 const textInputProps = { autoComplete: "off", autoCorrect: "off", autoCapitalize: "sentences", spellCheck: false };
 
 export function SettingsDialog({ open, onOpenChange, onSaved, selectedYear, selectedMonth }) {
-  const [settings, setSettings] = useState(() => settingsWithCommunityDefault(loadSettings()));
+  const [settings, setSettings] = useState(() => settingsWithCommunityDefault(DEFAULT_SETTINGS));
   const historyEntryAdded = useRef(false); const handlingPopState = useRef(false); const communityRef = useRef(null);
   const generatedTitle = `Programação do Mês de ${MONTHS_PT[selectedMonth ?? 0]} de ${selectedYear}`;
   useEffect(() => { if (!open) return; window.history.pushState({ ...(window.history.state || {}), settingsDialog: SETTINGS_HISTORY_STATE }, "", window.location.href); historyEntryAdded.current = true; const handlePopState = () => { handlingPopState.current = true; historyEntryAdded.current = false; onOpenChange(false); }; window.addEventListener("popstate", handlePopState); return () => window.removeEventListener("popstate", handlePopState); }, [open, onOpenChange]);
-  useEffect(() => { if (open) setSettings(settingsWithCommunityDefault(loadSettings())); }, [open]);
+  useEffect(() => {
+    if (!open) return;
+    loadSettings().then((next) => setSettings(settingsWithCommunityDefault(next)));
+  }, [open]);
   const closeDialog = () => { if (handlingPopState.current) { handlingPopState.current = false; onOpenChange(false); return; } if (historyEntryAdded.current && window.history.state?.settingsDialog === SETTINGS_HISTORY_STATE) { historyEntryAdded.current = false; window.history.back(); return; } onOpenChange(false); };
   const handleDialogOpenChange = (nextOpen) => { if (nextOpen) onOpenChange(true); else closeDialog(); };
   const updateHeader = (field, value) => setSettings((s) => ({ ...s, header: { ...s.header, [field]: value } }));
-  const handleSave = () => { const nextSettings = { ...settings, header: { ...settings.header, title: generatedTitle } }; saveSettings(nextSettings); toast.success("Ajustes salvos!"); closeDialog(); onSaved && onSaved(nextSettings); };
+  const handleSave = async () => {
+    const nextSettings = { ...settings, header: { ...settings.header, title: generatedTitle } };
+    try {
+      await saveSettings(nextSettings);
+      toast.success("Ajustes salvos!"); closeDialog(); onSaved && onSaved(nextSettings);
+    } catch { toast.error("Não foi possível salvar os ajustes."); }
+  };
   const handleReset = () => setSettings({ ...DEFAULT_SETTINGS, header: { ...DEFAULT_SETTINGS.header, title: generatedTitle, community: COMMUNITY_DEFAULT } });
   const moveCommunityCursorToEnd = () => { requestAnimationFrame(() => { const input = communityRef.current; if (input) { input.focus(); const end = input.value.length; input.setSelectionRange(end, end); } }); };
 

@@ -30,6 +30,7 @@ import {
   loadSettings,
   saveActivities,
   deleteActivity,
+  DEFAULT_SETTINGS,
 } from "../lib/storage";
 import { MONTHS_PT, weekdayFullOfDay, daysInMonth } from "../lib/date-utils";
 
@@ -216,14 +217,18 @@ export default function ActivityForm() {
   const m = parseInt(month, 10);
   const d = parseInt(day, 10);
   const navigate = useNavigate();
-  const [settings] = useState(loadSettings());
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [entries, setEntries] = useState([{ ...EMPTY_ENTRY }]);
   const [existing, setExisting] = useState(false);
   const entryRefs = useRef([]);
   const shouldScrollToNewEntry = useRef(false);
 
   useEffect(() => {
-    const monthData = loadMonth(y, m);
+    loadSettings().then(setSettings);
+  }, []);
+
+  useEffect(() => {
+    loadMonth(y, m).then((monthData) => {
     const dayData = monthData[d];
 
     if (Array.isArray(dayData) && dayData.length > 0) {
@@ -240,6 +245,7 @@ export default function ActivityForm() {
       setEntries([{ ...EMPTY_ENTRY }]);
       setExisting(false);
     }
+    });
   }, [y, m, d]);
 
   useEffect(() => {
@@ -308,17 +314,19 @@ export default function ActivityForm() {
       return;
     }
 
-    saveActivities(y, m, d, cleaned);
+    saveActivities(y, m, d, cleaned).then(() => {
     toast.success(
       cleaned.length > 1 ? `${cleaned.length} atividades salvas!` : "Atividade salva!"
     );
     goHome();
+    });
   };
 
   const handleDelete = () => {
-    deleteActivity(y, m, d);
+    deleteActivity(y, m, d).then(() => {
     toast.success("Atividades excluídas.");
     goHome();
+    });
   };
 
   return (

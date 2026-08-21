@@ -1,7 +1,10 @@
 import React from "react";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, LogOut } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { Button } from "./ui/button";
 
 export function AppHeader({ right }) {
+  const { user, logout } = useAuth();
   return (
     <header
       data-testid="app-header"
@@ -29,7 +32,10 @@ export function AppHeader({ right }) {
             </div>
           </div>
         </div>
-        {right}
+        <div className="flex items-center gap-3">
+          {right}
+          {user && <Button variant="ghost" size="sm" onClick={logout} data-testid="logout-button" title={`Sair de ${user.email || "sua conta"}`}><LogOut className="h-4 w-4 mr-1" /> Sair</Button>}
+        </div>
       </div>
     </header>
   );

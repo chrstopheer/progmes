@@ -16,8 +16,17 @@ export default function Home() {
   const [month, setMonth] = useState(Number.isFinite(urlMonth) && urlMonth >= 0 && urlMonth <= 11 ? urlMonth : now.getMonth());
   const [openSettings, setOpenSettings] = useState(false); const [monthData, setMonthData] = useState({}); const [savedMonths, setSavedMonths] = useState([]); const navigate = useNavigate();
   useEffect(() => { setSearchParams({ year: String(year), month: String(month) }, { replace: true }); }, [year, month, setSearchParams]);
-  useEffect(() => { setMonthData(loadMonth(year, month)); setSavedMonths(listSavedMonths()); }, [year, month]);
-  const refreshData = () => { setMonthData(loadMonth(year, month)); setSavedMonths(listSavedMonths()); };
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([loadMonth(year, month), listSavedMonths()]).then(([nextMonth, nextSaved]) => {
+      if (!cancelled) { setMonthData(nextMonth); setSavedMonths(nextSaved); }
+    });
+    return () => { cancelled = true; };
+  }, [year, month]);
+  const refreshData = async () => {
+    const [nextMonth, nextSaved] = await Promise.all([loadMonth(year, month), listSavedMonths()]);
+    setMonthData(nextMonth); setSavedMonths(nextSaved);
+  };
   const dim = daysInMonth(year, month); const firstWD = firstWeekday(year, month);
   const cells = useMemo(() => { const arr = []; for (let i = 0; i < firstWD; i += 1) arr.push(null); for (let d = 1; d <= dim; d += 1) arr.push(d); while (arr.length % 7 !== 0) arr.push(null); return arr; }, [dim, firstWD]);
   const activeCount = Object.values(monthData).reduce((sum, entries) => sum + (Array.isArray(entries) ? entries.length : 1), 0);

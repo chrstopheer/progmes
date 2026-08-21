@@ -1,64 +1,27 @@
 import React, { useEffect } from "react";
+import { listActivitySuggestions } from "../lib/storage";
 
-const ACTIVITIES_KEY = "prog_ong_activities_v1";
 const MAX_SUGGESTIONS = 6;
+let suggestionCache = { activities: [], places: [] };
 
 function getSuggestions(field, query) {
   const q = String(query || "").trim().toLocaleLowerCase("pt-BR");
   if (!q) return [];
-
-  try {
-    const raw = localStorage.getItem(ACTIVITIES_KEY);
-    if (!raw) return [];
-
-    const all = JSON.parse(raw) || {};
-    const values = [];
-
-    for (const monthData of Object.values(all)) {
-      for (const dayEntries of Object.values(monthData || {})) {
-        const entries = Array.isArray(dayEntries)
-          ? dayEntries
-          : [dayEntries];
-
-        for (const entry of entries) {
-          const value = String(entry?.[field] || "").trim();
-          if (value) values.push(value);
-        }
-      }
-    }
-
-    const unique = [
-      ...new Map(
-        values.map((value) => [
-          value.toLocaleLowerCase("pt-BR"),
-          value,
-        ]),
-      ).values(),
-    ];
-
-    const prefix = [];
-    const contains = [];
-
-    for (const value of unique) {
-      const lower = value.toLocaleLowerCase("pt-BR");
-
-      if (lower === q) continue;
-
-      if (lower.startsWith(q)) {
-        prefix.push(value);
-      } else if (lower.includes(q)) {
-        contains.push(value);
-      }
-    }
-
-    return [...prefix, ...contains].slice(0, MAX_SUGGESTIONS);
-  } catch {
-    return [];
-  }
+  const values = suggestionCache[field === "activity" ? "activities" : "places"] || [];
+  const prefix = []; const contains = [];
+  values.forEach((value) => {
+    const lower = value.toLocaleLowerCase("pt-BR");
+    if (lower === q) return;
+    if (lower.startsWith(q)) prefix.push(value); else if (lower.includes(q)) contains.push(value);
+  });
+  return [...prefix, ...contains].slice(0, MAX_SUGGESTIONS);
 }
 
 export default function HistorySuggestions() {
   useEffect(() => {
+    const refreshSuggestions = () => listActivitySuggestions().then((next) => { suggestionCache = next; });
+    refreshSuggestions();
+    window.addEventListener("prog-ong:data-updated", refreshSuggestions);
     let dropdown = null;
     let activeInput = null;
 
@@ -283,6 +246,7 @@ export default function HistorySuggestions() {
     );
 
     return () => {
+      window.removeEventListener("prog-ong:data-updated", refreshSuggestions);
       document.removeEventListener(
         "input",
         onInput,

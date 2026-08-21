@@ -14,13 +14,17 @@ export default function Schedule() {
   const { year, month } = useParams();
   const y = parseInt(year, 10), m = parseInt(month, 10);
   const navigate = useNavigate();
-  const [settings, setSettings] = useState(loadSettings());
+  const [settings, setSettings] = useState({ header: { community: "" }, footer: "" });
   const [monthData, setMonthData] = useState({});
   const previewRef = useRef(null);
   const [previewScale, setPreviewScale] = useState(1);
   const [previewHeight, setPreviewHeight] = useState(0);
 
-  useEffect(() => { setSettings(loadSettings()); setMonthData(loadMonth(y, m)); }, [y, m]);
+  useEffect(() => {
+    Promise.all([loadSettings(), loadMonth(y, m)]).then(([nextSettings, nextMonth]) => {
+      setSettings(nextSettings); setMonthData(nextMonth);
+    });
+  }, [y, m]);
   useEffect(() => {
     const updateSize = () => {
       const container = document.getElementById("preview-container"); if (!container) return;
@@ -44,7 +48,7 @@ export default function Schedule() {
       window.open(`https://wa.me/?text=${text}`, "_blank", "noopener"); toast.info("PDF baixado. Anexe-o no WhatsApp aberto.");
     } catch (err) { if (err && err.name === "AbortError") return; toast.error("Não foi possível compartilhar. PDF baixado como alternativa."); downloadMonthPdf({ year: y, month: m, settings, monthData }); }
   };
-  const handleDeleteMonth = () => { deleteMonth(y, m); toast.success("Programação do mês excluída."); navigate(`/?year=${y}&month=${m}`, { replace: true }); };
+  const handleDeleteMonth = async () => { await deleteMonth(y, m); toast.success("Programação do mês excluída."); navigate(`/?year=${y}&month=${m}`, { replace: true }); };
 
   return (
     <div className="min-h-screen bg-paper pb-24">
