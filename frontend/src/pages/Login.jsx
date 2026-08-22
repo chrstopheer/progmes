@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, Loader2, LogIn } from "lucide-react";
+import { CalendarDays, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
 import { useAuth } from "../contexts/AuthContext";
@@ -45,29 +45,55 @@ export default function Login() {
   };
 
   return (
-    <main className="min-h-screen bg-paper flex items-center justify-center p-6">
-      <section className="w-full max-w-md rounded-3xl bg-white border shadow-sm p-8 sm:p-10" style={{ borderColor: "var(--hairline)" }}>
-        <div className="flex items-center gap-3 mb-9">
-          <div className="h-12 w-12 rounded-2xl flex items-center justify-center" style={{ background: "var(--brand-yellow)" }}>
-            <CalendarDays className="h-6 w-6" style={{ color: "var(--brand-red)" }} />
+    <main className="min-h-screen bg-paper flex items-center justify-center px-5 py-8 sm:p-6">
+      <section
+        className="w-full max-w-sm rounded-[2rem] bg-white border shadow-sm px-7 py-9 sm:px-9 sm:py-10 text-center"
+        style={{ borderColor: "var(--hairline)" }}
+      >
+        <div className="flex flex-col items-center">
+          <div
+            className="h-20 w-20 rounded-3xl flex items-center justify-center shadow-sm mb-6"
+            style={{ background: "var(--brand-yellow)" }}
+          >
+            <CalendarDays className="h-10 w-10" style={{ color: "var(--brand-red)" }} />
           </div>
-          <div>
-            <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: "var(--brand-red)" }}>Progmes</p>
-            <h1 className="font-display text-2xl" style={{ color: "var(--ink)" }}>Programação</h1>
+          <h1 className="font-display text-4xl leading-tight" style={{ color: "var(--ink)" }}>
+            Programação
+          </h1>
+          <p className="mt-3 text-base" style={{ color: "var(--ink-soft)" }}>
+            Crie e compartilhe.
+          </p>
+        </div>
+
+        {!configured && (
+          <div
+            className="rounded-xl border p-4 mt-8 text-sm leading-6 text-left"
+            style={{ borderColor: "#f0c36d", background: "#fff8e7", color: "#7a4e00" }}
+          >
+            O Firebase ainda não foi configurado. Adicione as variáveis `REACT_APP_FIREBASE_*` antes de iniciar o app.
           </div>
-        </div>
-        <div className="space-y-3 mb-8">
-          <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: "var(--brand-blue)" }}>Área privada</p>
-          <h2 className="font-display text-3xl leading-tight">Entre para continuar</h2>
-          <p className="text-sm leading-6" style={{ color: "var(--ink-soft)" }}>Suas atividades e configurações ficam salvas na sua conta, disponíveis em qualquer dispositivo.</p>
-        </div>
-        {!configured && <div className="rounded-xl border p-4 mb-5 text-sm leading-6" style={{ borderColor: "#f0c36d", background: "#fff8e7", color: "#7a4e00" }}>O Firebase ainda não foi configurado. Adicione as variáveis `REACT_APP_FIREBASE_*` antes de iniciar o app.</div>}
-        {errorDetail && <div className="rounded-xl border p-4 mb-5 text-xs leading-5 break-words" style={{ borderColor: "#e2a3a3", background: "#fff1f1", color: "#8a1c1c" }} data-testid="firebase-error-detail"><strong>Detalhe técnico:</strong><br />{errorDetail}</div>}
-        <Button className="w-full h-12" onClick={handleLogin} disabled={!configured || busy} data-testid="login-submit-button" style={{ background: "var(--brand-red)", color: "white" }}>
-          {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <LogIn className="h-4 w-4 mr-2" />}
+        )}
+
+        {errorDetail && (
+          <div
+            className="rounded-xl border p-4 mt-6 text-xs leading-5 break-words text-left"
+            style={{ borderColor: "#e2a3a3", background: "#fff1f1", color: "#8a1c1c" }}
+            data-testid="firebase-error-detail"
+          >
+            <strong>Detalhe técnico:</strong><br />{errorDetail}
+          </div>
+        )}
+
+        <Button
+          className="w-full h-12 mt-8 border bg-white hover:bg-stone-50"
+          onClick={handleLogin}
+          disabled={!configured || busy}
+          data-testid="login-submit-button"
+          style={{ borderColor: "var(--hairline)", color: "var(--ink)" }}
+        >
+          {busy ? <Loader2 className="h-5 w-5 mr-3 animate-spin" /> : <span className="text-xl font-semibold mr-3" style={{ color: "#4285F4" }}>G</span>}
           {busy ? "Entrando..." : "Entrar com Google"}
         </Button>
-        <p className="mt-6 text-xs text-center leading-5" style={{ color: "var(--ink-soft)" }}>Ao entrar, você concorda em manter seus dados de programação privados na sua conta.</p>
       </section>
     </main>
   );
