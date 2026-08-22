@@ -1,5 +1,5 @@
 import "./App.css";
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import Home from "./pages/Home";
@@ -13,8 +13,24 @@ import { Loader2 } from "lucide-react";
 function ScrollToTop() {
   const { pathname, search } = useLocation();
 
-  useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  useLayoutEffect(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+
+    const resetScroll = () => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+
+    resetScroll();
+    const firstFrame = window.requestAnimationFrame(() => {
+      resetScroll();
+      window.requestAnimationFrame(resetScroll);
+    });
+
+    return () => window.cancelAnimationFrame(firstFrame);
   }, [pathname, search]);
 
   return null;
