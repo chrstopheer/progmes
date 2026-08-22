@@ -32,9 +32,9 @@ export function AppHeader({ right }) {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          {right}
-          {user && <Button variant="ghost" size="sm" onClick={logout} data-testid="logout-button" title={`Sair de ${user.email || "sua conta"}`}><LogOut className="h-4 w-4 mr-1" /> Sair</Button>}
+        <div className="ml-auto flex items-center justify-end gap-2">
+          {user && <Button variant="ghost" size="sm" onClick={logout} data-testid="logout-button" className="shrink-0" title={`Sair de ${user.email || "sua conta"}`}><LogOut className="h-4 w-4 mr-1" /> Sair</Button>}
+          <div className="shrink-0">{right}</div>
         </div>
       </div>
     </header>
