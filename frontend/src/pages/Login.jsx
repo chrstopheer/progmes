@@ -85,14 +85,24 @@ export default function Login() {
         )}
 
         <Button
-          className="w-full h-12 mt-8 border bg-white hover:bg-stone-50"
+          className="w-full h-12 mt-8 rounded-md border bg-white hover:bg-[#f8fafd] text-[#1f1f1f] font-medium text-sm"
           onClick={handleLogin}
           disabled={!configured || busy}
           data-testid="login-submit-button"
-          style={{ borderColor: "var(--hairline)", color: "var(--ink)" }}
+          aria-label="Entrar com o Google"
+          style={{ borderColor: "#747775", fontFamily: "Google Sans, Arial, sans-serif" }}
         >
-          {busy ? <Loader2 className="h-5 w-5 mr-3 animate-spin" /> : <span className="text-xl font-semibold mr-3" style={{ color: "#4285F4" }}>G</span>}
-          {busy ? "Entrando..." : "Entrar com Google"}
+          {busy ? (
+            <Loader2 className="h-5 w-5 mr-3 animate-spin" />
+          ) : (
+            <svg className="h-5 w-5 mr-3" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+              <path fill="#EA4335" d="M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.796 2.716v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z" />
+              <path fill="#4285F4" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.258c-.806.54-1.835.858-3.048.858-2.344 0-4.328-1.584-5.036-3.714H.958v2.331A9 9 0 0 0 9 18Z" />
+              <path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.963H.958A9 9 0 0 0 0 9c0 1.453.348 2.827.958 4.037l3.006-2.331Z" />
+              <path fill="#34A853" d="M9 3.58c1.322 0 2.508.454 3.44 1.345l2.581-2.581C13.463.89 11.426 0 9 0A9 9 0 0 0 .958 4.963l3.006 2.331C4.672 5.164 6.656 3.58 9 3.58Z" />
+            </svg>
+          )}
+          {busy ? "Entrando..." : "Entrar com o Google"}
         </Button>
       </section>
     </main>
