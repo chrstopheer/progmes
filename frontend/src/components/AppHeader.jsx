@@ -15,11 +15,11 @@ export function AppHeader({ right }) {
       <div className="max-w-4xl mx-auto flex items-center justify-between gap-4 px-4 py-3">
         <div className="min-w-0 flex items-center gap-3">
           <div
-            className="h-10 w-10 rounded-xl flex items-center justify-center shadow-sm"
+            className="h-10 w-10 min-h-10 min-w-10 shrink-0 rounded-xl flex items-center justify-center shadow-sm"
             style={{ background: "var(--brand-yellow)" }}
           >
             <CalendarDays
-              className="h-5 w-5"
+              className="h-5 w-5 shrink-0"
               style={{ color: "var(--brand-red)" }}
             />
           </div>
