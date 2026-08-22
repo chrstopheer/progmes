@@ -12,8 +12,8 @@ export function AppHeader({ right }) {
       style={{ borderColor: "var(--hairline)" }}
     >
       <div className="brand-bar h-1.5 w-full" />
-      <div className="max-w-4xl mx-auto flex items-center justify-between gap-4 px-4 py-3">
-        <div className="min-w-0 flex items-center gap-3">
+      <div className="max-w-4xl mx-auto flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <div className="min-w-0 flex items-center gap-3 sm:w-auto">
           <div
             className="h-10 w-10 min-h-10 min-w-10 shrink-0 rounded-xl flex items-center justify-center shadow-sm"
             style={{ background: "var(--brand-yellow)" }}
@@ -32,7 +32,7 @@ export function AppHeader({ right }) {
             </div>
           </div>
         </div>
-        <div className="ml-auto flex shrink-0 items-center justify-end gap-3">
+        <div className="flex w-full shrink-0 items-center justify-end gap-3 sm:ml-auto sm:w-auto">
           <div className="shrink-0">{right}</div>
           {user && <Button variant="ghost" size="sm" onClick={logout} data-testid="logout-button" className="shrink-0" title={`Sair de ${user.email || "sua conta"}`}><LogOut className="h-4 w-4 mr-1" /> Sair</Button>}
         </div>
