@@ -6,9 +6,17 @@ import { Button } from "../components/ui/button";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Login() {
-  const { configured, user, loading, signInWithGoogle } = useAuth();
+  const { configured, user, loading, authError, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
+  const [errorDetail, setErrorDetail] = useState("");
+
+  useEffect(() => {
+    if (authError) {
+      setErrorDetail(`${authError.code || "firebase/error"}: ${authError.message || "erro desconhecido"}`);
+    }
+  }, [authError]);
+
   useEffect(() => {
     if (!loading && user) {
       navigate("/", { replace: true });
@@ -29,6 +37,7 @@ export default function Login() {
           : error?.code === "auth/popup-blocked"
             ? "O navegador bloqueou a janela do Google. Tente novamente ou permita popups para este site."
             : "Não foi possível entrar com o Google. Tente novamente.";
+      setErrorDetail(`${error?.code || "firebase/error"}: ${error?.message || message}`);
       toast.error(message);
     } finally {
       if (!user) setBusy(false);
@@ -53,6 +62,7 @@ export default function Login() {
           <p className="text-sm leading-6" style={{ color: "var(--ink-soft)" }}>Suas atividades e configurações ficam salvas na sua conta, disponíveis em qualquer dispositivo.</p>
         </div>
         {!configured && <div className="rounded-xl border p-4 mb-5 text-sm leading-6" style={{ borderColor: "#f0c36d", background: "#fff8e7", color: "#7a4e00" }}>O Firebase ainda não foi configurado. Adicione as variáveis `REACT_APP_FIREBASE_*` antes de iniciar o app.</div>}
+        {errorDetail && <div className="rounded-xl border p-4 mb-5 text-xs leading-5 break-words" style={{ borderColor: "#e2a3a3", background: "#fff1f1", color: "#8a1c1c" }} data-testid="firebase-error-detail"><strong>Detalhe técnico:</strong><br />{errorDetail}</div>}
         <Button className="w-full h-12" onClick={handleLogin} disabled={!configured || busy} data-testid="login-submit-button" style={{ background: "var(--brand-red)", color: "white" }}>
           {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <LogIn className="h-4 w-4 mr-2" />}
           {busy ? "Entrando..." : "Entrar com Google"}
