@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { browserLocalPersistence, getRedirectResult, onAuthStateChanged, setPersistence, signInWithPopup, signInWithRedirect, signOut } from "firebase/auth";
+import { browserLocalPersistence, onAuthStateChanged, setPersistence, signInWithPopup, signOut } from "firebase/auth";
 import { auth, firebaseConfigured, googleProvider } from "../lib/firebase";
 import { setStorageUser } from "../lib/storage";
 
@@ -27,18 +27,6 @@ export function AuthProvider({ children }) {
       setLoading(false);
     });
 
-    getRedirectResult(auth)
-      .then((result) => {
-        if (active && result?.user) {
-          setUser(result.user);
-          setStorageUser(result.user);
-        }
-      })
-      .catch((error) => {
-        console.error("Falha ao processar o retorno do Google:", error);
-        if (active) setAuthError(error);
-      });
-
     return () => {
       active = false;
       unsubscribe();
@@ -52,12 +40,8 @@ export function AuthProvider({ children }) {
     configured: firebaseConfigured,
     signInWithGoogle: () => {
       if (!auth) throw new Error("Firebase não está configurado.");
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(window.navigator.userAgent);
-      return setPersistence(auth, browserLocalPersistence).then(() => (
-        isMobile
-          ? signInWithRedirect(auth, googleProvider)
-          : signInWithPopup(auth, googleProvider)
-      ));
+      return setPersistence(auth, browserLocalPersistence)
+        .then(() => signInWithPopup(auth, googleProvider));
     },
     logout: () => (auth ? signOut(auth) : Promise.resolve()),
   }), [user, loading, authError]);
