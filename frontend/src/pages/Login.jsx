@@ -19,7 +19,11 @@ export default function Login() {
     } catch (error) {
       const message = error?.code === "auth/popup-closed-by-user"
         ? "A janela de login foi fechada."
-        : "Não foi possível entrar com o Google. Tente novamente.";
+        : error?.code === "auth/unauthorized-domain"
+          ? "Este domínio do Preview ainda não foi autorizado no Firebase."
+          : error?.code === "auth/popup-blocked"
+            ? "O navegador bloqueou a janela do Google. Tente novamente ou permita popups para este site."
+            : "Não foi possível entrar com o Google. Tente novamente.";
       toast.error(message);
     } finally {
       setBusy(false);
