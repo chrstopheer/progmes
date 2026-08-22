@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { getRedirectResult, onAuthStateChanged, signInWithPopup, signInWithRedirect, signOut } from "firebase/auth";
+import { browserLocalPersistence, getRedirectResult, onAuthStateChanged, setPersistence, signInWithPopup, signInWithRedirect, signOut } from "firebase/auth";
 import { auth, firebaseConfigured, googleProvider } from "../lib/firebase";
 import { setStorageUser } from "../lib/storage";
 
@@ -8,6 +8,7 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(firebaseConfigured);
+  const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
     if (!auth) {
@@ -16,6 +17,9 @@ export function AuthProvider({ children }) {
       return undefined;
     }
     let active = true;
+    setPersistence(auth, browserLocalPersistence).catch((error) => {
+      console.error("Falha ao configurar a persistência da sessão:", error);
+    });
     const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
       if (!active) return;
       setUser(nextUser);
@@ -32,6 +36,7 @@ export function AuthProvider({ children }) {
       })
       .catch((error) => {
         console.error("Falha ao processar o retorno do Google:", error);
+        if (active) setAuthError(error);
       });
 
     return () => {
@@ -43,16 +48,19 @@ export function AuthProvider({ children }) {
   const value = useMemo(() => ({
     user,
     loading,
+    authError,
     configured: firebaseConfigured,
     signInWithGoogle: () => {
       if (!auth) throw new Error("Firebase não está configurado.");
       const isMobile = /Android|iPhone|iPad|iPod/i.test(window.navigator.userAgent);
-      return isMobile
-        ? signInWithRedirect(auth, googleProvider)
-        : signInWithPopup(auth, googleProvider);
+      return setPersistence(auth, browserLocalPersistence).then(() => (
+        isMobile
+          ? signInWithRedirect(auth, googleProvider)
+          : signInWithPopup(auth, googleProvider)
+      ));
     },
     logout: () => (auth ? signOut(auth) : Promise.resolve()),
-  }), [user, loading]);
+  }), [user, loading, authError]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
