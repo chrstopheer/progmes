@@ -1,4 +1,5 @@
 import "./App.css";
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import Home from "./pages/Home";
@@ -8,6 +9,16 @@ import Schedule from "./pages/Schedule";
 import HistorySuggestions from "./components/HistorySuggestions";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+
+function ScrollToTop() {
+  const { pathname, search } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [pathname, search]);
+
+  return null;
+}
 
 function ProtectedRoutes() {
   const { user, loading, configured } = useAuth();
@@ -42,6 +53,7 @@ function App() {
     <div className="App">
       <AuthProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <AppRoutes />
         </BrowserRouter>
       </AuthProvider>
