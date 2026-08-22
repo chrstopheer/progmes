@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { onAuthStateChanged, signInWithPopup, signInWithRedirect, signOut } from "firebase/auth";
+import { getRedirectResult, onAuthStateChanged, signInWithPopup, signInWithRedirect, signOut } from "firebase/auth";
 import { auth, firebaseConfigured, googleProvider } from "../lib/firebase";
 import { setStorageUser } from "../lib/storage";
 
@@ -15,11 +15,29 @@ export function AuthProvider({ children }) {
       setLoading(false);
       return undefined;
     }
-    return onAuthStateChanged(auth, (nextUser) => {
+    let active = true;
+    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+      if (!active) return;
       setUser(nextUser);
       setStorageUser(nextUser);
       setLoading(false);
     });
+
+    getRedirectResult(auth)
+      .then((result) => {
+        if (active && result?.user) {
+          setUser(result.user);
+          setStorageUser(result.user);
+        }
+      })
+      .catch((error) => {
+        console.error("Falha ao processar o retorno do Google:", error);
+      });
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
 
   const value = useMemo(() => ({
