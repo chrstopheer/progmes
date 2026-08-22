@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CalendarDays, Loader2, LogIn } from "lucide-react";
 import { toast } from "sonner";
@@ -6,9 +6,14 @@ import { Button } from "../components/ui/button";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Login() {
-  const { configured, signInWithGoogle } = useAuth();
+  const { configured, user, loading, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/", { replace: true });
+    }
+  }, [loading, user, navigate]);
 
   const handleLogin = async () => {
     setBusy(true);
@@ -26,7 +31,7 @@ export default function Login() {
             : "Não foi possível entrar com o Google. Tente novamente.";
       toast.error(message);
     } finally {
-      setBusy(false);
+      if (!user) setBusy(false);
     }
   };
 
