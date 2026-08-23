@@ -62,20 +62,42 @@ function loadLocalSnapshot() {
   }
 }
 
+function hasLocalData(local) {
+  return Boolean(local?.settings) || Object.keys(local?.activities || {}).length > 0;
+}
+
 async function readSnapshot() {
   if (cache) return cache;
   if (!activeUser || !db) return { settings: { ...DEFAULT_SETTINGS }, activities: {} };
+
   const ref = doc(db, "users", activeUser.uid);
   const snapshot = await getDoc(ref);
   const remote = snapshot.exists() ? snapshot.data() : {};
-  const local = loadLocalSnapshot();
-  cache = {
-    settings: normalizeSettings(remote.settings || local.settings || DEFAULT_SETTINGS),
-    activities: normalizeActivities(remote.activities || local.activities),
-  };
-  if (!snapshot.exists() && (local.settings || Object.keys(local.activities).length)) {
-    await setDoc(ref, cache, { merge: true });
+
+  // Never associate anonymous/local data with a Google account silently.
+  // If this account has no cloud data yet, migration from this device requires
+  // an explicit confirmation from the user.
+  if (!snapshot.exists()) {
+    const local = loadLocalSnapshot();
+    if (hasLocalData(local)) {
+      const shouldImport = window.confirm(
+        "Encontramos dados do Progmes salvos neste aparelho. Deseja importar esses dados para a sua conta Google?"
+      );
+      if (shouldImport) {
+        cache = {
+          settings: normalizeSettings(local.settings || DEFAULT_SETTINGS),
+          activities: normalizeActivities(local.activities),
+        };
+        await setDoc(ref, cache, { merge: true });
+        return cache;
+      }
+    }
   }
+
+  cache = {
+    settings: normalizeSettings(remote.settings || DEFAULT_SETTINGS),
+    activities: normalizeActivities(remote.activities || {}),
+  };
   return cache;
 }
 
