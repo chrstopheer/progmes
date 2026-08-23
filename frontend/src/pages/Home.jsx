@@ -63,13 +63,9 @@ export default function Home() {
   );
 
   const handleSavedProgrammingClick = (event, sm) => {
-    // The saved-programming buttons must not move the page because of focus.
     event.preventDefault();
     event.currentTarget.blur();
-
-    if (sm.year === year && sm.month === month) return;
-    setYear(sm.year);
-    setMonth(sm.month);
+    navigate(`/programacao/${sm.year}/${sm.month}`);
   };
 
   return (
