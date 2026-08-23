@@ -21,6 +21,7 @@ export default function Home() {
   const [savedMonths, setSavedMonths] = useState([]);
   const navigate = useNavigate();
   const preserveScrollOnNextUrlUpdate = useRef(false);
+  const savedScrollY = useRef(0);
 
   useEffect(() => {
     const preserveScroll = preserveScrollOnNextUrlUpdate.current;
@@ -29,6 +30,14 @@ export default function Home() {
       { year: String(year), month: String(month) },
       { replace: true, preventScrollReset: preserveScroll }
     );
+
+    if (preserveScroll) {
+      const y = savedScrollY.current;
+      requestAnimationFrame(() => {
+        window.scrollTo(0, y);
+        requestAnimationFrame(() => window.scrollTo(0, y));
+      });
+    }
   }, [year, month, setSearchParams]);
 
   useEffect(() => {
@@ -227,6 +236,7 @@ export default function Home() {
                 <button
                   key={sm.key}
                   onClick={() => {
+                    savedScrollY.current = window.scrollY;
                     preserveScrollOnNextUrlUpdate.current = true;
                     setYear(sm.year);
                     setMonth(sm.month);
