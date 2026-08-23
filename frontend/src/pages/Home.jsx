@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppHeader } from "../components/AppHeader";
 import { SettingsDialog } from "../components/SettingsDialog";
@@ -20,9 +20,15 @@ export default function Home() {
   const [monthData, setMonthData] = useState({});
   const [savedMonths, setSavedMonths] = useState([]);
   const navigate = useNavigate();
+  const preserveScrollOnNextUrlUpdate = useRef(false);
 
   useEffect(() => {
-    setSearchParams({ year: String(year), month: String(month) }, { replace: true });
+    const preserveScroll = preserveScrollOnNextUrlUpdate.current;
+    preserveScrollOnNextUrlUpdate.current = false;
+    setSearchParams(
+      { year: String(year), month: String(month) },
+      { replace: true, preventScrollReset: preserveScroll }
+    );
   }, [year, month, setSearchParams]);
 
   useEffect(() => {
@@ -221,6 +227,7 @@ export default function Home() {
                 <button
                   key={sm.key}
                   onClick={() => {
+                    preserveScrollOnNextUrlUpdate.current = true;
                     setYear(sm.year);
                     setMonth(sm.month);
                   }}
