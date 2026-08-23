@@ -36,8 +36,9 @@ export function AuthProvider({ children }) {
     enterLocalAccess: () => { setLocalMode(true); setLocalAccess(true); setUser(null); setLoading(false); },
     signInWithGoogle: () => {
       if (!auth) throw new Error("Firebase não está configurado.");
-      setLocalMode(false);
-      setLocalAccess(false);
+      // Do not disable local access before the popup finishes. If this login
+      // was started from the visualization screen, clearing localAccess here
+      // would make ProtectedRoutes redirect to /login and lose the route.
       return setPersistence(auth, browserLocalPersistence).then(() => signInWithPopup(auth, googleProvider));
     },
     logout: () => { setLocalMode(false); setLocalAccess(false); return auth ? signOut(auth) : Promise.resolve(); },
