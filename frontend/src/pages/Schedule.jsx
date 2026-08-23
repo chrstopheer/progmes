@@ -4,16 +4,19 @@ import { AppHeader } from "../components/AppHeader";
 import { SchedulePreview } from "../components/SchedulePreview";
 import { Button } from "../components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../components/ui/alert-dialog";
-import { ArrowLeft, FileDown, Share2, Trash2 } from "lucide-react";
+import { ArrowLeft, FileDown, Share2, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { MONTHS_PT } from "../lib/date-utils";
 import { loadMonth, loadSettings, deleteMonth } from "../lib/storage";
 import { buildMonthPdfFile, downloadMonthPdf } from "../lib/pdf";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Schedule() {
   const { year, month } = useParams();
   const y = parseInt(year, 10), m = parseInt(month, 10);
   const navigate = useNavigate();
+  const { configured, user, signInWithGoogle } = useAuth();
+  const [googleBusy, setGoogleBusy] = useState(false);
   const [settings, setSettings] = useState({ header: { community: "" }, footer: "" });
   const [monthData, setMonthData] = useState({});
   const previewRef = useRef(null);
@@ -49,6 +52,19 @@ export default function Schedule() {
     } catch (err) { if (err && err.name === "AbortError") return; toast.error("Não foi possível compartilhar. PDF baixado como alternativa."); downloadMonthPdf({ year: y, month: m, settings, monthData }); }
   };
   const handleDeleteMonth = async () => { await deleteMonth(y, m); toast.success("Programação do mês excluída."); navigate(`/?year=${y}&month=${m}`, { replace: true }); };
+  const handleGoogleLogin = async () => {
+    setGoogleBusy(true);
+    try {
+      await signInWithGoogle();
+      toast.success("Login realizado com sucesso.");
+      navigate("/", { replace: true });
+    } catch (error) {
+      const message = error?.code === "auth/popup-closed-by-user" ? "A janela de login foi fechada." : error?.code === "auth/popup-blocked" ? "O navegador bloqueou a janela do Google." : "Não foi possível entrar com o Google. Tente novamente.";
+      toast.error(message);
+    } finally {
+      setGoogleBusy(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-paper pb-24">
@@ -56,7 +72,23 @@ export default function Schedule() {
       <main className="max-w-4xl mx-auto p-4 sm:p-6 space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3"><div><div className="text-xs uppercase tracking-widest font-semibold" style={{ color: "var(--brand-red)" }}>PROGRAMAÇÃO DO MÊS</div><h1 className="font-display text-3xl sm:text-4xl mt-1" data-testid="schedule-heading">{MONTHS_PT[m]} <span style={{ color: "var(--brand-blue)" }}>{y}</span></h1><p className="text-sm mt-1" style={{ color: "var(--ink-soft)" }}>{count} atividade{count !== 1 ? "s" : ""} cadastrada{count !== 1 ? "s" : ""}.</p></div></div>
         <div id="preview-container" className="rounded-2xl border shadow-sm bg-white p-3 sm:p-5 overflow-hidden" style={{ borderColor: "var(--hairline)" }}><div style={{ width: "100%", height: previewHeight ? `${previewHeight}px` : "auto", overflow: "hidden", display: "flex", justifyContent: "center" }}><div style={{ width: `${720 * previewScale}px`, flex: "0 0 auto" }}><SchedulePreview ref={previewRef} year={y} month={m} settings={settings} monthData={monthData} scale={previewScale} /></div></div></div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3"><Button onClick={handleShareWhatsApp} data-testid="share-whatsapp-btn" className="w-full h-12 text-base" style={{ background: "#25D366", color: "white" }}><Share2 className="h-4 w-4 mr-2" /> Enviar por WhatsApp</Button><Button onClick={handleDownload} data-testid="download-pdf-btn" variant="outline" className="w-full h-12 text-base" style={{ borderColor: "var(--brand-blue)", color: "var(--brand-blue)" }}><FileDown className="h-4 w-4 mr-2" /> Baixar PDF</Button><AlertDialog><AlertDialogTrigger asChild><Button variant="outline" data-testid="delete-month-btn" className="w-full h-12 text-base" style={{ borderColor: "var(--brand-red)", color: "var(--brand-red)" }} disabled={count === 0}><Trash2 className="h-4 w-4 mr-2" /> Excluir mês</Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Excluir programação inteira?</AlertDialogTitle><AlertDialogDescription>Todas as atividades de {MONTHS_PT[m]} de {y} serão removidas.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel data-testid="del-month-cancel">Cancelar</AlertDialogCancel><AlertDialogAction data-testid="del-month-confirm" onClick={handleDeleteMonth} style={{ background: "var(--brand-red)", color: "white" }}>Sim, excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Button onClick={handleShareWhatsApp} data-testid="share-whatsapp-btn" className="w-full h-12 text-base" style={{ background: "#25D366", color: "white" }}><Share2 className="h-4 w-4 mr-2" /> Enviar por WhatsApp</Button>
+          <Button onClick={handleDownload} data-testid="download-pdf-btn" variant="outline" className="w-full h-12 text-base" style={{ borderColor: "var(--brand-blue)", color: "var(--brand-blue)" }}><FileDown className="h-4 w-4 mr-2" /> Baixar PDF</Button>
+          <AlertDialog><AlertDialogTrigger asChild><Button variant="outline" data-testid="delete-month-btn" className="w-full h-12 text-base" style={{ borderColor: "var(--brand-red)", color: "var(--brand-red)" }} disabled={count === 0}><Trash2 className="h-4 w-4 mr-2" /> Excluir mês</Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Excluir programação inteira?</AlertDialogTitle><AlertDialogDescription>Todas as atividades de {MONTHS_PT[m]} de {y} serão removidas.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel data-testid="del-month-cancel">Cancelar</AlertDialogCancel><AlertDialogAction data-testid="del-month-confirm" onClick={handleDeleteMonth} style={{ background: "var(--brand-red)", color: "white" }}>Sim, excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div>
+        {!user && (
+          <Button onClick={handleGoogleLogin} disabled={!configured || googleBusy} data-testid="schedule-google-login-btn" className="w-full h-12 text-base border bg-white hover:bg-[#f8fafd]" style={{ borderColor: "#747775", color: "#1f1f1f", fontFamily: "Google Sans, Arial, sans-serif" }}>
+            {googleBusy ? <Loader2 className="h-5 w-5 mr-3 animate-spin" /> : (
+              <svg className="h-5 w-5 mr-3" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+                <path fill="#EA4335" d="M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.796 2.716v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z" />
+                <path fill="#4285F4" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.258c-.806.54-1.835.858-3.048.858-2.344 0-4.328-1.584-5.036-3.714H.958v2.331A9 9 0 0 0 9 18Z" />
+                <path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.963H.958A9 9 0 0 0 0 9c0 1.453.348 2.827.958 4.037l3.006-2.331Z" />
+                <path fill="#34A853" d="M9 3.58c1.322 0 2.508.454 3.44 1.345l2.581-2.581C13.463.89 11.426 0 9 0A9 9 0 0 0 .958 4.963l3.006 2.331C4.672 5.164 6.656 3.58 9 3.58Z" />
+              </svg>
+            )}
+            {googleBusy ? "Entrando..." : "Entrar com o Google"}
+          </Button>
+        )}
       </main>
     </div>
   );
