@@ -11,12 +11,26 @@ export const DEFAULT_SETTINGS = {
 const SETTINGS_KEY = "prog_ong_settings_v1";
 const ACTIVITIES_KEY = "prog_ong_activities_v1";
 const LOCAL_MODE_KEY = "progmes_local_mode_v1";
+const LOCAL_IMPORT_DECISION_KEY = "progmes_local_import_decision_v1";
 let activeUser = null;
 let localMode = false;
 let cache = null;
+let readPromise = null;
 
-export function setStorageUser(user) { activeUser = user || null; if (user) localMode = false; cache = null; }
-export function setLocalMode(enabled) { localMode = Boolean(enabled); if (localMode) activeUser = null; cache = null; try { if (localMode) sessionStorage.setItem(LOCAL_MODE_KEY, "1"); else sessionStorage.removeItem(LOCAL_MODE_KEY); } catch {} }
+function localImportDecisionKey(userId) {
+  return `${LOCAL_IMPORT_DECISION_KEY}_${userId}`;
+}
+
+function getLocalImportDecision(userId) {
+  try { return userId ? sessionStorage.getItem(localImportDecisionKey(userId)) : null; } catch { return null; }
+}
+
+function setLocalImportDecision(userId, decision) {
+  try { if (userId) sessionStorage.setItem(localImportDecisionKey(userId), decision); } catch {}
+}
+
+export function setStorageUser(user) { activeUser = user || null; if (user) localMode = false; cache = null; readPromise = null; }
+export function setLocalMode(enabled) { localMode = Boolean(enabled); if (localMode) activeUser = null; cache = null; readPromise = null; try { if (localMode) sessionStorage.setItem(LOCAL_MODE_KEY, "1"); else sessionStorage.removeItem(LOCAL_MODE_KEY); } catch {} }
 export function getLocalMode() { try { return sessionStorage.getItem(LOCAL_MODE_KEY) === "1"; } catch { return false; } }
 
 export function ymKey(year, month) { return `${year}-${String(month + 1).padStart(2, "0")}`; }
@@ -54,28 +68,40 @@ function hasLocalData(local) { return Boolean(local?.settings) || Object.keys(lo
 
 async function readSnapshot() {
   if (cache) return cache;
-  if (localMode) {
-    const local = loadLocalSnapshot();
-    cache = { settings: normalizeSettings(local.settings || DEFAULT_SETTINGS), activities: normalizeActivities(local.activities) };
-    return cache;
-  }
-  if (!activeUser || !db) return { settings: { ...DEFAULT_SETTINGS }, activities: {} };
-  const ref = doc(db, "users", activeUser.uid);
-  const snapshot = await getDoc(ref);
-  const remote = snapshot.exists() ? snapshot.data() : {};
-  if (!snapshot.exists()) {
-    const local = loadLocalSnapshot();
-    if (hasLocalData(local)) {
-      const shouldImport = window.confirm("Encontramos dados do Progmes salvos neste aparelho. Deseja importar esses dados para a sua conta Google?");
-      if (shouldImport) {
-        cache = { settings: normalizeSettings(local.settings || DEFAULT_SETTINGS), activities: normalizeActivities(local.activities) };
-        await setDoc(ref, cache, { merge: true });
-        return cache;
+  if (readPromise) return readPromise;
+
+  readPromise = (async () => {
+    if (localMode) {
+      const local = loadLocalSnapshot();
+      cache = { settings: normalizeSettings(local.settings || DEFAULT_SETTINGS), activities: normalizeActivities(local.activities) };
+      return cache;
+    }
+    if (!activeUser || !db) return { settings: { ...DEFAULT_SETTINGS }, activities: {} };
+    const ref = doc(db, "users", activeUser.uid);
+    const snapshot = await getDoc(ref);
+    const remote = snapshot.exists() ? snapshot.data() : {};
+    if (!snapshot.exists()) {
+      const local = loadLocalSnapshot();
+      if (hasLocalData(local) && !getLocalImportDecision(activeUser.uid)) {
+        const shouldImport = window.confirm("Encontramos dados do Progmes salvos neste aparelho. Deseja importar esses dados para a sua conta Google?");
+        if (shouldImport) {
+          cache = { settings: normalizeSettings(local.settings || DEFAULT_SETTINGS), activities: normalizeActivities(local.activities) };
+          await setDoc(ref, cache, { merge: true });
+          setLocalImportDecision(activeUser.uid, "imported");
+          return cache;
+        }
+        setLocalImportDecision(activeUser.uid, "declined");
       }
     }
+    cache = { settings: normalizeSettings(remote.settings || DEFAULT_SETTINGS), activities: normalizeActivities(remote.activities || {}) };
+    return cache;
+  })();
+
+  try {
+    return await readPromise;
+  } finally {
+    readPromise = null;
   }
-  cache = { settings: normalizeSettings(remote.settings || DEFAULT_SETTINGS), activities: normalizeActivities(remote.activities || {}) };
-  return cache;
 }
 
 async function writeSnapshot(next) {
