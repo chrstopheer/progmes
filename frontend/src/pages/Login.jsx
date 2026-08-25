@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, Download, Loader2 } from "lucide-react";
+import { CalendarDays, CheckCircle2, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
 import { useAuth } from "../contexts/AuthContext";
@@ -17,6 +17,8 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
   const [errorDetail, setErrorDetail] = useState("");
   const [canInstall, setCanInstall] = useState(hasInstallPrompt);
+  const [installState, setInstallState] = useState("idle");
+  const [justInstalled, setJustInstalled] = useState(false);
   const [showInstallGuide, setShowInstallGuide] = useState(false);
   const [isStandalone, setIsStandalone] = useState(isPwaInstalled);
 
@@ -32,7 +34,11 @@ export default function Login() {
     const unsubscribeInstallState = subscribeInstallState(({ canInstall: available, installed }) => {
       setCanInstall(available);
       setIsStandalone(installed);
-      if (installed) setShowInstallGuide(false);
+      if (installed) {
+        setInstallState("installed");
+        setJustInstalled(true);
+        setShowInstallGuide(false);
+      }
     });
 
     updateStandaloneState();
@@ -81,12 +87,12 @@ export default function Login() {
       return;
     }
 
+    setInstallState("installing");
     const choice = await promptInstall();
     setCanInstall(hasInstallPrompt());
 
-    if (choice?.outcome === "accepted") {
-      toast.success("Siga a confirmação do navegador para instalar o app.");
-    } else {
+    if (choice?.outcome !== "accepted") {
+      setInstallState("idle");
       setShowInstallGuide(true);
     }
   };
@@ -158,7 +164,7 @@ export default function Login() {
           {busy ? "Entrando..." : "Entrar com o Google"}
         </Button>
 
-        {!isStandalone && (
+        {!isStandalone && !justInstalled && installState !== "installed" && (
           <div
             className="mt-5 rounded-xl border p-4 text-left"
             style={{ borderColor: "#d9c98a", background: "#fffdf3" }}
@@ -182,10 +188,14 @@ export default function Login() {
               style={{ background: "var(--brand-blue)", color: "white" }}
               data-testid="install-pwa-button"
             >
-              <Download className="h-4 w-4 mr-2" aria-hidden="true" />
-              Instalar aplicativo
+              {installState === "installing" ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
+              ) : (
+                <Download className="h-4 w-4 mr-2" aria-hidden="true" />
+              )}
+              {installState === "installing" ? "Baixando..." : "Instalar aplicativo"}
             </Button>
-            {showInstallGuide && (
+            {showInstallGuide && installState !== "installing" && (
               <p
                 className="mt-3 text-xs leading-5"
                 style={{ color: "var(--ink-soft)" }}
@@ -197,6 +207,20 @@ export default function Login() {
                   : "No Chrome, toque no menu ⋮ e escolha Instalar aplicativo ou Adicionar à tela inicial."}
               </p>
             )}
+          </div>
+        )}
+
+        {justInstalled && (
+          <div
+            className="mt-5 rounded-xl border p-4 flex items-center gap-3 text-left"
+            style={{ borderColor: "#a8d8b0", background: "#f1fbf3" }}
+            role="status"
+            data-testid="install-pwa-success"
+          >
+            <CheckCircle2 className="h-5 w-5 shrink-0" style={{ color: "#218739" }} aria-hidden="true" />
+            <p className="text-sm font-semibold" style={{ color: "#216e2d" }}>
+              Aplicativo instalado com sucesso.
+            </p>
           </div>
         )}
 

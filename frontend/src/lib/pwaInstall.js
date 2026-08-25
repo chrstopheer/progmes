@@ -42,9 +42,9 @@ export function subscribeInstallState(callback) {
   const currentWindow = getWindow();
   if (!currentWindow) return () => {};
 
-  const notify = () => callback({
+  const notify = (event) => callback({
     canInstall: hasInstallPrompt(),
-    installed: isPwaInstalled(),
+    installed: event?.type === APP_INSTALLED_EVENT || isPwaInstalled(),
   });
 
   currentWindow.addEventListener(INSTALL_AVAILABLE_EVENT, notify);
