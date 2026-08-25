@@ -9,7 +9,6 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [localAccess, setLocalAccess] = useState(getLocalMode());
   const [loading, setLoading] = useState(firebaseConfigured && !getLocalMode());
-  const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
     if (getLocalMode()) {
@@ -20,7 +19,9 @@ export function AuthProvider({ children }) {
     }
     if (!auth) { setStorageUser(null); setLoading(false); return undefined; }
     let active = true;
-    setPersistence(auth, browserLocalPersistence).catch((error) => console.error("Falha ao configurar a persistência da sessão:", error));
+    setPersistence(auth, browserLocalPersistence).catch((error) => {
+      if (process.env.NODE_ENV !== "production") console.error("Falha ao configurar a persistência da sessão:", error);
+    });
     const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
       if (!active) return;
       setUser(nextUser);
@@ -32,7 +33,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const value = useMemo(() => ({
-    user, localAccess, loading, authError, configured: firebaseConfigured,
+    user, localAccess, loading, configured: firebaseConfigured,
     enterLocalAccess: () => { setLocalMode(true); setLocalAccess(true); setUser(null); setLoading(false); },
     signInWithGoogle: () => {
       if (!auth) throw new Error("Firebase não está configurado.");
@@ -40,7 +41,7 @@ export function AuthProvider({ children }) {
       return setPersistence(auth, browserLocalPersistence).then(() => signInWithPopup(auth, googleProvider));
     },
     logout: () => { setLocalMode(false); setLocalAccess(false); return auth ? signOut(auth) : Promise.resolve(); },
-  }), [user, localAccess, loading, authError]);
+  }), [user, localAccess, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
