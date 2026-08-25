@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, Loader2 } from "lucide-react";
+import { CalendarDays, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
 import { useAuth } from "../contexts/AuthContext";
@@ -32,6 +32,7 @@ export default function Login() {
         {errorDetail && <div className="rounded-xl border p-4 mt-5 text-xs leading-5 break-words text-left" style={{ borderColor: "#e2a3a3", background: "#fff1f1", color: "#8a1c1c" }} data-testid="firebase-error-detail"><strong>Detalhe técnico:</strong><br />{errorDetail}</div>}
         <Button className="w-full h-12 mt-5 rounded-md border bg-white hover:bg-[#f8fafd] text-[#1f1f1f] font-medium text-sm" onClick={handleLogin} disabled={!configured || busy} data-testid="login-submit-button" aria-label="Entrar com o Google" style={{ borderColor: "#747775", fontFamily: "Google Sans, Arial, sans-serif" }}>{busy ? <Loader2 className="h-5 w-5 mr-3 animate-spin" /> : <svg className="h-5 w-5 mr-3" viewBox="0 0 18 18" aria-hidden="true" focusable="false"><path fill="#EA4335" d="M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.796 2.716v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z" /><path fill="#4285F4" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.258c-.806.54-1.835.858-3.048.858-2.344 0-4.328-1.584-5.036-3.714H.958v2.331A9 9 0 0 0 9 18Z" /><path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.963H.958A9 9 0 0 0 0 9c0 1.453.348 2.827.958 4.037l3.006-2.331Z" /><path fill="#34A853" d="M9 3.58c1.322 0 2.508.454 3.44 1.345l2.581-2.581C13.463.89 11.426 0 9 0A9 9 0 0 0 .958 4.963l3.006 2.331C4.672 5.164 6.656 3.58 9 3.58Z" /></svg>}{busy ? "Entrando..." : "Entrar com o Google"}</Button>
         <div className="mt-4 pt-3 border-t" style={{ borderColor: "var(--hairline)" }}><button type="button" onClick={handleLocalAccess} className="text-sm font-medium underline-offset-4 hover:underline" style={{ color: "var(--brand-blue)" }} data-testid="login-without-google-btn">Entrar sem conta Google</button><p className="mt-1 text-xs leading-4" style={{ color: "var(--ink-soft)" }}>Sem o login, os dados ficam apenas neste dispositivo e poderão ser perdidos.</p></div>
+        <div className="mt-4 flex flex-col items-center text-center"><div className="flex items-center gap-2"><Download className="h-4 w-4" style={{ color: "var(--brand-blue)" }} aria-hidden="true" /><p className="text-sm font-semibold" style={{ color: "var(--ink)" }}>Instale o app no celular</p></div><p className="mt-1 text-xs leading-5" style={{ color: "var(--ink-soft)" }}>No Chrome, toque no menu ⋮ e escolha Instalar e criar atalho.</p></div>
       </section>
     </main>
   );
