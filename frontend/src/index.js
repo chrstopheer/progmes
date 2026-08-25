@@ -4,6 +4,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@/index.css";
 import App from "@/App";
 
+const PWA_INSTALLED_KEY = "progmes-pwa-installed";
+
+if (typeof window !== "undefined") {
+  window.addEventListener("appinstalled", () => {
+    try { window.localStorage.setItem(PWA_INSTALLED_KEY, "true"); } catch {}
+  });
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

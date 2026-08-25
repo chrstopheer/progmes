@@ -9,17 +9,16 @@ const PWA_INSTALLED_KEY = "progmes-pwa-installed";
 
 function isPwaInstalled() {
   if (typeof window === "undefined") return false;
+  const isStandalone = Boolean(
+    window.matchMedia?.("(display-mode: standalone)")?.matches ||
+      window.navigator.standalone === true,
+  );
+
   try {
-    return Boolean(
-      window.matchMedia?.("(display-mode: standalone)")?.matches ||
-        window.navigator.standalone === true ||
-        window.localStorage.getItem(PWA_INSTALLED_KEY) === "true",
-    );
+    if (isStandalone) window.localStorage.setItem(PWA_INSTALLED_KEY, "true");
+    return isStandalone || window.localStorage.getItem(PWA_INSTALLED_KEY) === "true";
   } catch {
-    return Boolean(
-      window.matchMedia?.("(display-mode: standalone)")?.matches ||
-        window.navigator.standalone === true,
-    );
+    return isStandalone;
   }
 }
 
