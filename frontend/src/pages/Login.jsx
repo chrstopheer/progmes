@@ -4,23 +4,21 @@ import { CalendarDays, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
 import { useAuth } from "../contexts/AuthContext";
-
-function isPwaStandalone() {
-  if (typeof window === "undefined") return false;
-  return Boolean(
-    window.matchMedia?.("(display-mode: standalone)")?.matches ||
-      window.navigator.standalone === true,
-  );
-}
+import {
+  hasInstallPrompt,
+  isPwaInstalled,
+  promptInstall,
+  subscribeInstallState,
+} from "../lib/pwaInstall";
 
 export default function Login() {
   const { configured, user, loading, authError, signInWithGoogle, enterLocalAccess } = useAuth();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [errorDetail, setErrorDetail] = useState("");
-  const [installPrompt, setInstallPrompt] = useState(null);
+  const [canInstall, setCanInstall] = useState(hasInstallPrompt);
   const [showInstallGuide, setShowInstallGuide] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(isPwaStandalone);
+  const [isStandalone, setIsStandalone] = useState(isPwaInstalled);
 
   useEffect(() => {
     if (authError) {
@@ -30,26 +28,18 @@ export default function Login() {
 
   useEffect(() => {
     const mediaQuery = window.matchMedia?.("(display-mode: standalone)");
-    const updateStandaloneState = () => setIsStandalone(isPwaStandalone());
-    const handleBeforeInstallPrompt = (event) => {
-      event.preventDefault();
-      setInstallPrompt(event);
-    };
-    const handleAppInstalled = () => {
-      setInstallPrompt(null);
-      setShowInstallGuide(false);
-      setIsStandalone(true);
-      toast.success("Aplicativo instalado com sucesso.");
-    };
+    const updateStandaloneState = () => setIsStandalone(isPwaInstalled());
+    const unsubscribeInstallState = subscribeInstallState(({ canInstall: available, installed }) => {
+      setCanInstall(available);
+      setIsStandalone(installed);
+      if (installed) setShowInstallGuide(false);
+    });
 
     updateStandaloneState();
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    window.addEventListener("appinstalled", handleAppInstalled);
     mediaQuery?.addEventListener?.("change", updateStandaloneState);
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-      window.removeEventListener("appinstalled", handleAppInstalled);
+      unsubscribeInstallState();
       mediaQuery?.removeEventListener?.("change", updateStandaloneState);
     };
   }, []);
@@ -86,14 +76,13 @@ export default function Login() {
   };
 
   const handleInstall = async () => {
-    if (!installPrompt) {
+    if (!canInstall) {
       setShowInstallGuide(true);
       return;
     }
 
-    await installPrompt.prompt();
-    const choice = await installPrompt.userChoice;
-    setInstallPrompt(null);
+    const choice = await promptInstall();
+    setCanInstall(hasInstallPrompt());
 
     if (choice?.outcome === "accepted") {
       toast.success("Siga a confirmação do navegador para instalar o app.");
@@ -194,7 +183,7 @@ export default function Login() {
               data-testid="install-pwa-button"
             >
               <Download className="h-4 w-4 mr-2" aria-hidden="true" />
-              {installPrompt ? "Instalar aplicativo" : "Ver como instalar"}
+              Instalar aplicativo
             </Button>
             {showInstallGuide && (
               <p
