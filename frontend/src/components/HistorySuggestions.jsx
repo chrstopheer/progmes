@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { listActivitySuggestions } from "../lib/storage";
+import { deleteActivitySuggestion, listActivitySuggestions } from "../lib/storage";
 
 const MAX_SUGGESTIONS = 6;
 let suggestionCache = { activities: [], places: [] };
@@ -149,10 +149,18 @@ export default function HistorySuggestions() {
       });
 
       suggestions.forEach((suggestion) => {
-        const option = document.createElement("button");
+        const option = document.createElement("div");
+        const selectButton = document.createElement("button");
+        const label = document.createElement("span");
+        const deleteButton = document.createElement("button");
 
-        option.type = "button";
-        option.textContent = suggestion;
+        selectButton.type = "button";
+        selectButton.setAttribute("aria-label", `Usar sugestão ${suggestion}`);
+        label.textContent = suggestion;
+        deleteButton.type = "button";
+        deleteButton.setAttribute("aria-label", `Excluir sugestão ${suggestion}`);
+        deleteButton.setAttribute("title", "Excluir sugestão do histórico");
+        deleteButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15M10 11v6m4-6v6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>';
 
         option.setAttribute(
           "data-progmes-suggestion",
@@ -160,17 +168,60 @@ export default function HistorySuggestions() {
         );
 
         Object.assign(option.style, {
-          display: "block",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "8px",
           width: "100%",
           border: "0",
           background: "white",
           textAlign: "left",
-          padding: "10px 12px",
+          padding: "10px 8px 10px 12px",
           fontSize: "14px",
           lineHeight: "1.3",
           cursor: "pointer",
           borderRadius: "7px",
         });
+
+        Object.assign(selectButton.style, {
+          minWidth: "0",
+          flex: "1 1 auto",
+          border: "0",
+          padding: "0",
+          color: "inherit",
+          background: "transparent",
+          textAlign: "left",
+          font: "inherit",
+          lineHeight: "inherit",
+          cursor: "pointer",
+        });
+
+        Object.assign(label.style, {
+          display: "block",
+          minWidth: "0",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        });
+
+        Object.assign(deleteButton.style, {
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flex: "0 0 auto",
+          width: "32px",
+          height: "32px",
+          padding: "6px",
+          border: "0",
+          borderRadius: "6px",
+          color: "var(--muted-foreground, #64748b)",
+          background: "transparent",
+          cursor: "pointer",
+        });
+
+        const deleteIcon = deleteButton.querySelector("svg");
+        deleteIcon.style.width = "18px";
+        deleteIcon.style.height = "18px";
 
         option.addEventListener("mouseenter", () => {
           option.style.background =
@@ -181,18 +232,46 @@ export default function HistorySuggestions() {
           option.style.background = "white";
         });
 
-        option.addEventListener("mousedown", (event) => {
+        deleteButton.addEventListener("mouseenter", () => {
+          deleteButton.style.color = "var(--destructive, #dc2626)";
+          deleteButton.style.background = "var(--brand-blue-soft, #eef5ff)";
+        });
+
+        deleteButton.addEventListener("mouseleave", () => {
+          deleteButton.style.color = "var(--muted-foreground, #64748b)";
+          deleteButton.style.background = "transparent";
+        });
+
+        deleteButton.addEventListener("mousedown", async (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+
+          const input = activeInput;
+          try {
+            await deleteActivitySuggestion(getField(input), suggestion);
+            suggestionCache = await listActivitySuggestions();
+            if (input && input.isConnected) show(input);
+            else hide();
+          } catch (error) {
+            console.error("Não foi possível excluir a sugestão do histórico.", error);
+          }
+        });
+
+        selectButton.addEventListener("mousedown", (event) => {
           event.preventDefault();
 
-          if (!activeInput) return;
+          const input = activeInput;
+          if (!input) return;
 
-          setReactValue(activeInput, suggestion);
+          setReactValue(input, suggestion);
 
           hide();
 
-          activeInput.focus();
+          input.focus();
         });
 
+        selectButton.append(label);
+        option.append(selectButton, deleteButton);
         dropdown.appendChild(option);
       });
 

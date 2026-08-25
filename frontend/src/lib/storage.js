@@ -12,6 +12,7 @@ const SETTINGS_KEY = "prog_ong_settings_v1";
 const ACTIVITIES_KEY = "prog_ong_activities_v1";
 const LOCAL_MODE_KEY = "progmes_local_mode_v1";
 const LOCAL_IMPORT_DECISION_KEY = "progmes_local_import_decision_v1";
+const HIDDEN_SUGGESTIONS_KEY = "progmes_hidden_suggestions_v1";
 let activeUser = null;
 let localMode = false;
 let cache = null;
@@ -27,6 +28,18 @@ function getLocalImportDecision(userId) {
 
 function setLocalImportDecision(userId, decision) {
   try { if (userId) sessionStorage.setItem(localImportDecisionKey(userId), decision); } catch {}
+}
+
+function normalizeSuggestionKey(value) {
+  return String(value || "").trim().toLocaleLowerCase("pt-BR");
+}
+
+function normalizeHiddenSuggestions(value) {
+  const hidden = value && typeof value === "object" ? value : {};
+  return {
+    activities: Array.isArray(hidden.activities) ? hidden.activities.map(normalizeSuggestionKey).filter(Boolean) : [],
+    places: Array.isArray(hidden.places) ? hidden.places.map(normalizeSuggestionKey).filter(Boolean) : [],
+  };
 }
 
 export function setStorageUser(user) { activeUser = user || null; if (user) localMode = false; cache = null; readPromise = null; }
@@ -60,8 +73,9 @@ function loadLocalSnapshot() {
   try {
     const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null");
     const activities = JSON.parse(localStorage.getItem(ACTIVITIES_KEY) || "{}");
-    return { settings: settings ? normalizeSettings(settings) : null, activities: normalizeActivities(activities) };
-  } catch { return { settings: null, activities: {} }; }
+    const hiddenSuggestions = JSON.parse(localStorage.getItem(HIDDEN_SUGGESTIONS_KEY) || "{}");
+    return { settings: settings ? normalizeSettings(settings) : null, activities: normalizeActivities(activities), hiddenSuggestions: normalizeHiddenSuggestions(hiddenSuggestions) };
+  } catch { return { settings: null, activities: {}, hiddenSuggestions: { activities: [], places: [] } }; }
 }
 
 function hasLocalData(local) { return Boolean(local?.settings) || Object.keys(local?.activities || {}).length > 0; }
@@ -73,10 +87,10 @@ async function readSnapshot() {
   readPromise = (async () => {
     if (localMode) {
       const local = loadLocalSnapshot();
-      cache = { settings: normalizeSettings(local.settings || DEFAULT_SETTINGS), activities: normalizeActivities(local.activities) };
+      cache = { settings: normalizeSettings(local.settings || DEFAULT_SETTINGS), activities: normalizeActivities(local.activities), hiddenSuggestions: normalizeHiddenSuggestions(local.hiddenSuggestions) };
       return cache;
     }
-    if (!activeUser || !db) return { settings: { ...DEFAULT_SETTINGS }, activities: {} };
+    if (!activeUser || !db) return { settings: { ...DEFAULT_SETTINGS }, activities: {}, hiddenSuggestions: { activities: [], places: [] } };
     const ref = doc(db, "users", activeUser.uid);
     const snapshot = await getDoc(ref);
     const remote = snapshot.exists() ? snapshot.data() : {};
@@ -85,7 +99,7 @@ async function readSnapshot() {
       if (hasLocalData(local) && !getLocalImportDecision(activeUser.uid)) {
         const shouldImport = window.confirm("Encontramos dados do Progmes salvos neste aparelho. Deseja importar esses dados para a sua conta Google?");
         if (shouldImport) {
-          cache = { settings: normalizeSettings(local.settings || DEFAULT_SETTINGS), activities: normalizeActivities(local.activities) };
+          cache = { settings: normalizeSettings(local.settings || DEFAULT_SETTINGS), activities: normalizeActivities(local.activities), hiddenSuggestions: normalizeHiddenSuggestions(local.hiddenSuggestions) };
           await setDoc(ref, cache, { merge: true });
           setLocalImportDecision(activeUser.uid, "imported");
           return cache;
@@ -93,7 +107,7 @@ async function readSnapshot() {
         setLocalImportDecision(activeUser.uid, "declined");
       }
     }
-    cache = { settings: normalizeSettings(remote.settings || DEFAULT_SETTINGS), activities: normalizeActivities(remote.activities || {}) };
+    cache = { settings: normalizeSettings(remote.settings || DEFAULT_SETTINGS), activities: normalizeActivities(remote.activities || {}), hiddenSuggestions: normalizeHiddenSuggestions(remote.hiddenSuggestions) };
     return cache;
   })();
 
@@ -105,10 +119,11 @@ async function readSnapshot() {
 }
 
 async function writeSnapshot(next) {
-  cache = { settings: normalizeSettings(next.settings), activities: normalizeActivities(next.activities) };
+  cache = { settings: normalizeSettings(next.settings), activities: normalizeActivities(next.activities), hiddenSuggestions: normalizeHiddenSuggestions(next.hiddenSuggestions || cache?.hiddenSuggestions) };
   if (localMode) {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(cache.settings));
     localStorage.setItem(ACTIVITIES_KEY, JSON.stringify(cache.activities));
+    localStorage.setItem(HIDDEN_SUGGESTIONS_KEY, JSON.stringify(cache.hiddenSuggestions));
     window.dispatchEvent(new Event("prog-ong:data-updated"));
     return;
   }
@@ -125,4 +140,6 @@ export async function saveActivity(year, month, day, activity) { return saveActi
 export async function deleteActivity(year, month, day) { const current = await readSnapshot(); const activities = { ...current.activities }; const key = ymKey(year, month); if (activities[key]) { const monthData = { ...activities[key] }; delete monthData[day]; if (Object.keys(monthData).length) activities[key] = monthData; else delete activities[key]; await writeSnapshot({ ...current, activities }); } }
 export async function listSavedMonths() { const all = (await readSnapshot()).activities; return Object.entries(all).map(([key, value]) => { const [y, m] = key.split("-"); const count = Object.values(value || {}).reduce((sum, entries) => sum + (Array.isArray(entries) ? entries.length : 1), 0); return { key, year: parseInt(y, 10), month: parseInt(m, 10) - 1, count }; }).sort((a, b) => (a.key < b.key ? 1 : -1)); }
 export async function deleteMonth(year, month) { const current = await readSnapshot(); const activities = { ...current.activities }; delete activities[ymKey(year, month)]; await writeSnapshot({ ...current, activities }); }
-export async function listActivitySuggestions() { const all = (await readSnapshot()).activities; const activities = new Set(); const places = new Set(); Object.values(all).forEach((month) => Object.values(month || {}).forEach((entries) => (Array.isArray(entries) ? entries : [entries]).forEach((entry) => { if (entry?.activity?.trim()) activities.add(entry.activity.trim()); if (entry?.place?.trim()) places.add(entry.place.trim()); }))); return { activities: [...activities].sort(), places: [...places].sort() }; }
+export async function listActivitySuggestions() { const snapshot = await readSnapshot(); const all = snapshot.activities; const hidden = normalizeHiddenSuggestions(snapshot.hiddenSuggestions); const hiddenActivities = new Set(hidden.activities); const hiddenPlaces = new Set(hidden.places); const activities = new Set(); const places = new Set(); Object.values(all).forEach((month) => Object.values(month || {}).forEach((entries) => (Array.isArray(entries) ? entries : [entries]).forEach((entry) => { const activity = entry?.activity?.trim(); const place = entry?.place?.trim(); if (activity && !hiddenActivities.has(normalizeSuggestionKey(activity))) activities.add(activity); if (place && !hiddenPlaces.has(normalizeSuggestionKey(place))) places.add(place); }))); return { activities: [...activities].sort(), places: [...places].sort() }; }
+
+export async function deleteActivitySuggestion(field, suggestion) { const key = field === "activity" ? "activities" : field === "place" ? "places" : null; const normalized = normalizeSuggestionKey(suggestion); if (!key || !normalized) return; const snapshot = await readSnapshot(); const hidden = normalizeHiddenSuggestions(snapshot.hiddenSuggestions); if (!hidden[key].includes(normalized)) hidden[key] = [...hidden[key], normalized]; await writeSnapshot({ ...snapshot, hiddenSuggestions: hidden }); }
