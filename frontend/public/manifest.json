@@ -31,6 +31,12 @@
   ],
   "start_url": "./",
   "scope": "./",
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "./manifest.json"
+    }
+  ],
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#F4C430",

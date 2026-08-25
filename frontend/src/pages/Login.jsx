@@ -22,6 +22,16 @@ function isPwaInstalled() {
   }
 }
 
+async function checkInstalledRelatedPwa() {
+  if (typeof navigator === "undefined" || typeof navigator.getInstalledRelatedApps !== "function") return null;
+  try {
+    const relatedApps = await navigator.getInstalledRelatedApps();
+    return relatedApps.some((app) => app.platform === "webapp");
+  } catch {
+    return null;
+  }
+}
+
 export default function Login() {
   const { configured, user, loading, authError, signInWithGoogle, enterLocalAccess } = useAuth();
   const navigate = useNavigate();
@@ -30,12 +40,29 @@ export default function Login() {
   const [pwaInstalled, setPwaInstalled] = useState(isPwaInstalled);
   useEffect(() => { if (authError) setErrorDetail(`${authError.code || "firebase/error"}: ${authError.message || "erro desconhecido"}`); }, [authError]);
   useEffect(() => {
+    let active = true;
     const handleAppInstalled = () => {
       try { window.localStorage.setItem(PWA_INSTALLED_KEY, "true"); } catch {}
       setPwaInstalled(true);
     };
+    const checkInstallation = async () => {
+      const relatedPwaInstalled = await checkInstalledRelatedPwa();
+      if (!active || relatedPwaInstalled === null) return;
+      if (relatedPwaInstalled) {
+        try { window.localStorage.setItem(PWA_INSTALLED_KEY, "true"); } catch {}
+        setPwaInstalled(true);
+      } else if (!window.matchMedia?.("(display-mode: standalone)")?.matches) {
+        try { window.localStorage.removeItem(PWA_INSTALLED_KEY); } catch {}
+        setPwaInstalled(false);
+      }
+    };
+
     window.addEventListener("appinstalled", handleAppInstalled);
-    return () => window.removeEventListener("appinstalled", handleAppInstalled);
+    checkInstallation();
+    return () => {
+      active = false;
+      window.removeEventListener("appinstalled", handleAppInstalled);
+    };
   }, []);
   useEffect(() => { if (!loading && user) navigate("/", { replace: true }); }, [loading, user, navigate]);
 
