@@ -7,7 +7,6 @@ import Login from "./pages/Login";
 import ActivityForm from "./pages/ActivityForm";
 import Schedule from "./pages/Schedule";
 import HistorySuggestions from "./components/HistorySuggestions";
-import InstallPrompt from "./components/InstallPrompt";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 
@@ -34,7 +33,7 @@ function ProtectedRoutes() {
 function AppRoutes() { return <Routes><Route path="/login" element={<Login />} /><Route path="*" element={<ProtectedRoutes />} /></Routes>; }
 
 function App() {
-  return <div className="App"><AuthProvider><BrowserRouter><ScrollToTop /><AppRoutes /><InstallPrompt /></BrowserRouter></AuthProvider><Toaster position="top-center" richColors closeButton toastOptions={{ duration: 3000 }} /></div>;
+  return <div className="App"><AuthProvider><BrowserRouter><ScrollToTop /><AppRoutes /></BrowserRouter></AuthProvider><Toaster position="top-center" richColors closeButton toastOptions={{ duration: 3000 }} /></div>;
 }
 
 export default App;
